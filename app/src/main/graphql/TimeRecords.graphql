@@ -1,0 +1,8 @@
+query TimeRecords {
+  timeRecords {
+    id
+    start
+    end
+    tags
+  }
+}

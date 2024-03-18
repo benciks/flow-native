@@ -1,0 +1,8 @@
+mutation timeStop {
+    timeStop {
+        id
+        start
+        end
+        tags
+    }
+}

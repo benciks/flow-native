@@ -1,0 +1,8 @@
+mutation timeStart {
+    timeStart {
+        id
+        start
+        end
+        tags
+    }
+}

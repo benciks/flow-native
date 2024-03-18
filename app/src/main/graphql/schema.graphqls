@@ -1,0 +1,37 @@
+"""
+The @defer directive may be specified on a fragment spread to imply
+de-prioritization, that causes the fragment to be omitted in the initial
+response, and delivered as a subsequent response afterward. A query with @defer
+directive will cause the request to potentially return multiple responses, where
+non-deferred data is delivered in the initial response and data deferred
+delivered in a subsequent response. @include and @skip take precedence over @defer.
+"""
+directive @defer(if: Boolean = true, label: String) on FRAGMENT_SPREAD | INLINE_FRAGMENT
+
+"""
+The @specifiedBy built-in directive is used within the type system definition
+language to provide a scalar specification URL for specifying the behavior of
+custom scalar types.
+"""
+directive @specifiedBy(url: String!) on SCALAR
+
+type Mutation {
+  timeStart: TimeRecord!
+  timeStop: TimeRecord!
+  deleteTimeRecord(id: ID!): TimeRecord!
+  modifyTimeRecordDate(id: ID!, start: String, end: String): TimeRecord!
+  tagTimeRecord(id: ID!, tag: String!): TimeRecord!
+  untagTimeRecord(id: ID!, tag: String!): TimeRecord!
+}
+
+type Query {
+  timeRecords: [TimeRecord!]!
+}
+
+type TimeRecord {
+  id: ID!
+  start: String!
+  end: String!
+  tags: [String!]!
+}
+
