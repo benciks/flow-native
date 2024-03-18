@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -22,6 +23,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -54,54 +56,66 @@ fun TimeScreen(
     val context = LocalContext.current
 
     Scaffold { paddingValues ->
-        LazyColumn(
-            contentPadding = PaddingValues(
-                top = paddingValues.calculateTopPadding() + 16.dp,
-                bottom = paddingValues.calculateBottomPadding() + 8.dp,
-                start = 16.dp,
-                end = 16.dp
-            )
-        ) {
-            item {
-                TimerHeader(
-                    isTracking = state.isTracking,
-                    startTimer = viewModel::startTimer,
-                    stopTimer = viewModel::stopTimer,
-                    currentTime = state.currentTimeSeconds,
-                    secondsToTime = viewModel::secondsToTime,
-                    startedAt = state.startedAt
-                )
+        if (state.isLoading) {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                CircularProgressIndicator()
             }
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp, bottom = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-
-                    Text(
-                        text = "Time Records",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
+        } else {
+            LazyColumn(
+                contentPadding = PaddingValues(
+                    top = paddingValues.calculateTopPadding() + 16.dp,
+                    bottom = paddingValues.calculateBottomPadding() + 8.dp,
+                    start = 16.dp,
+                    end = 16.dp
+                )
+            ) {
+                item {
+                    TimerHeader(
+                        isTracking = state.isTracking,
+                        startTimer = viewModel::startTimer,
+                        stopTimer = viewModel::stopTimer,
+                        currentTime = state.currentTimeSeconds,
+                        secondsToTime = viewModel::secondsToTime,
+                        startedAt = state.startedAt
                     )
-                    Button(onClick = { /*TODO*/ }) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Add",
-                            modifier = Modifier.padding(end = 4.dp)
+                }
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 16.dp, bottom = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+
+                        Text(
+                            text = "Time Records",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
                         )
-                        Text(text = "Create")
+                        Button(onClick = { /*TODO*/ }) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Add",
+                                modifier = Modifier.padding(end = 4.dp)
+                            )
+                            Text(text = "Create")
+                        }
                     }
                 }
-            }
-            items(state.timeRecords, key = { it.start }) {
-                Box(modifier = Modifier.animateItemPlacement()) {
-                    TimeRecordItem(it, viewModel::toDisplayDateTime, viewModel::displayDifference, navController, viewModel::onSelectRecord)
+                items(state.timeRecords, key = { it.start }) {
+                    Box(modifier = Modifier.animateItemPlacement()) {
+                        TimeRecordItem(
+                            it,
+                            viewModel::toDisplayDateTime,
+                            viewModel::displayDifference,
+                            navController,
+                            viewModel::onSelectRecord
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
-                Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }

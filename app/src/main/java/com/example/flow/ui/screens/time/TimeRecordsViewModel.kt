@@ -28,9 +28,9 @@ class TimeRecordsViewModel @Inject constructor(
 
     private fun initializeViewModel() {
         viewModelScope.launch {
-            val timeRecords = useCases.getTimeRecords.execute()
-
             _state.update { it.copy(isLoading = true) }
+
+            val timeRecords = useCases.getTimeRecords.execute()
             _state.update { it.copy(timeRecords = timeRecords, isLoading = false) }
 
             restartTimerIfRunning(timeRecords)
