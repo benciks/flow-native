@@ -1,0 +1,8 @@
+mutation deleteTimeRecord($id: ID!) {
+  deleteTimeRecord(id: $id) {
+    id
+    start
+    end
+    tags
+  }
+}

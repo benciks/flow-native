@@ -1,28 +1,25 @@
 package com.example.flow.data.di
 
 import com.apollographql.apollo3.ApolloClient
-import com.apollographql.apollo3.api.ApolloRequest
-import com.apollographql.apollo3.api.ApolloResponse
-import com.apollographql.apollo3.api.Operation
 import com.apollographql.apollo3.cache.normalized.FetchPolicy
 import com.apollographql.apollo3.cache.normalized.api.MemoryCacheFactory
 import com.apollographql.apollo3.cache.normalized.fetchPolicy
 import com.apollographql.apollo3.cache.normalized.normalizedCache
-import com.apollographql.apollo3.interceptor.ApolloInterceptor
-import com.apollographql.apollo3.interceptor.ApolloInterceptorChain
 import com.apollographql.apollo3.network.okHttpClient
 import com.example.flow.data.network.ApolloTimeRecordClient
 import com.example.flow.domain.network.TimeRecordsClient
-import com.example.flow.domain.use_case.GetTimeRecordUseCase
-import com.example.flow.domain.use_case.StartTimerUseCase
-import com.example.flow.domain.use_case.StopTimerUseCase
-import com.example.flow.domain.use_case.TimeRecordUseCases
+import com.example.flow.domain.use_case.time.DeleteTimeRecordUseCase
+import com.example.flow.domain.use_case.time.GetTimeRecordUseCase
+import com.example.flow.domain.use_case.time.ModifyTimeRecordDateUseCase
+import com.example.flow.domain.use_case.time.StartTimerUseCase
+import com.example.flow.domain.use_case.time.StopTimerUseCase
+import com.example.flow.domain.use_case.time.TagTimeRecordUseCase
+import com.example.flow.domain.use_case.time.TimeRecordUseCases
+import com.example.flow.domain.use_case.time.UntagTimeRecordUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.onEach
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import javax.inject.Singleton
@@ -61,7 +58,11 @@ object AppModule {
         return TimeRecordUseCases(
             GetTimeRecordUseCase(timeRecordsClient),
             StartTimerUseCase(timeRecordsClient),
-            StopTimerUseCase(timeRecordsClient)
+            StopTimerUseCase(timeRecordsClient),
+            DeleteTimeRecordUseCase(timeRecordsClient),
+            ModifyTimeRecordDateUseCase(timeRecordsClient),
+            TagTimeRecordUseCase(timeRecordsClient),
+            UntagTimeRecordUseCase(timeRecordsClient)
         )
     }
 }

@@ -1,12 +1,12 @@
-package com.example.flow.domain.use_case
+package com.example.flow.domain.use_case.time
 
 import com.example.flow.domain.model.TimeRecord
 import com.example.flow.domain.network.TimeRecordsClient
 
-class StopTimerUseCase(
+class StartTimerUseCase(
     private val timeRecordsClient: TimeRecordsClient
 ) {
     suspend fun execute(): TimeRecord {
-        return timeRecordsClient.stopTimer()
+        return timeRecordsClient.startTimer()
     }
 }

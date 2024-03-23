@@ -45,6 +45,7 @@ import com.example.flow.domain.model.TimeRecord
 import com.example.flow.ui.theme.Gray500
 import com.example.flow.ui.theme.Gray600
 import com.example.flow.ui.theme.Primary
+import java.time.LocalDateTime
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -128,7 +129,7 @@ fun TimerHeader(
     stopTimer: () -> Unit = {},
     currentTime: Int = 0,
     secondsToTime: (Int) -> String = { it.toString() },
-    startedAt: String = ""
+    startedAt: String? = null
 ) {
     Box(
         modifier = Modifier
@@ -181,15 +182,15 @@ fun TimerHeader(
 @Composable
 fun TimeRecordItem(
     record: TimeRecord,
-    toDisplayDateTime: (String) -> String = { it },
-    displayDifference: (String, String) -> String = { _, _ -> "12:33" },
+    toDisplayDateTime: (LocalDateTime?) -> String = { it.toString() },
+    displayDifference: (LocalDateTime?, LocalDateTime?) -> String = { _, _ -> "12:33" },
     navController: NavHostController,
     onSelectItem: (timeRecord: TimeRecord) -> Unit = {}
 ) {
     Card(
         onClick = {
             onSelectItem(record)
-            navController.navigate("timeDetail")
+            navController.navigate("time_detail")
                   },
         modifier = Modifier
             .fillMaxWidth()
@@ -210,7 +211,7 @@ fun TimeRecordItem(
                             modifier = Modifier.width(56.dp)
                         )
                         Text(
-                            text = toDisplayDateTime(record.start),
+                            text = toDisplayDateTime(record.startDateTime),
                             color = Color.Black,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.SemiBold
@@ -232,7 +233,7 @@ fun TimeRecordItem(
                             )
                         } else {
                             Text(
-                                text = toDisplayDateTime(record.end),
+                                text = toDisplayDateTime(record.endDateTime),
                                 color = Color.Black,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.SemiBold
@@ -242,7 +243,7 @@ fun TimeRecordItem(
                 }
                 if (record.end.isNotEmpty()) {
                     Column {
-                        Text(text = displayDifference(record.start,record.end), fontSize = 16.sp, color = Gray500)
+                        Text(text = displayDifference(record.startDateTime ,record.endDateTime), fontSize = 16.sp, color = Gray500)
                     }
                 }
             }

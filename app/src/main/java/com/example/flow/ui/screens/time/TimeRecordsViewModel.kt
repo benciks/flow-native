@@ -1,9 +1,11 @@
 package com.example.flow.ui.screens.time
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.apollographql.apollo3.api.Optional
 import com.example.flow.domain.model.TimeRecord
-import com.example.flow.domain.use_case.TimeRecordUseCases
+import com.example.flow.domain.use_case.time.TimeRecordUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,37 +39,36 @@ class TimeRecordsViewModel @Inject constructor(
         }
     }
 
-    private fun timestampToDateTime(timestamp: String): LocalDateTime {
-        return LocalDateTime.parse(timestamp, DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'")).minusHours(1)
-    }
+    fun toDisplayDateTime(date: LocalDateTime?): String {
+        if (date == null) {
+            return "-"
+        }
 
-    fun toDisplayDateTime(timestamp: String): String {
-        val dateTime = timestampToDateTime(timestamp)
+        Log.i("TimeRecordsViewModel", "toDisplayDateTime: ${date.toLocalDate()} ${LocalDateTime.now().toLocalDate()}")
+
 
         // If today, display time only
-        if (dateTime.toLocalDate() == LocalDateTime.now().toLocalDate()) {
-            return dateTime.format(DateTimeFormatter.ofPattern("HH:mm"))
+        if (date.toLocalDate() == LocalDateTime.now().toLocalDate()) {
+            return date.format(DateTimeFormatter.ofPattern("HH:mm"))
         }
 
         // If yesterday, display "Yesterday"
-        if (dateTime.toLocalDate() == LocalDateTime.now().toLocalDate().minusDays(1)) {
-            return "Yesterday " + dateTime.format(DateTimeFormatter.ofPattern(" HH:mm"))
+        if (date.toLocalDate() == LocalDateTime.now().toLocalDate().minusDays(1)) {
+            return "Yesterday " + date.format(DateTimeFormatter.ofPattern(" HH:mm"))
         }
 
-        // Otherwise, display date and time
-        return dateTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"))
+        return date.format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"))
     }
 
     private fun restartTimerIfRunning(timeRecords: List<TimeRecord>) {
         if (timeRecords.any { it.end.isBlank() }) {
             val runningRecord = timeRecords.find { it.end.isBlank() }!!
-            val start = timestampToDateTime(runningRecord.start)
-            val seconds = calculateSecondsElapsed(start)
+            val seconds = calculateSecondsElapsed(runningRecord.startDateTime)
 
             _state.update {
                 it.copy(
                     isTracking = true,
-                    startedAt = start.format(DateTimeFormatter.ofPattern("HH:mm")),
+                    startedAt = runningRecord.startDateTime?.format(DateTimeFormatter.ofPattern("HH:mm")),
                     currentTimeSeconds = seconds
                 )
             }
@@ -76,17 +77,21 @@ class TimeRecordsViewModel @Inject constructor(
         }
     }
 
-    private fun calculateSecondsElapsed(start: LocalDateTime, end: LocalDateTime = LocalDateTime.now().minusHours(2)): Int {
+    private fun calculateSecondsElapsed(start: LocalDateTime?, end: LocalDateTime? = LocalDateTime.now()): Int {
+        if (start == null || end == null) {
+            return 0
+        }
         val startEpochSeconds = start.toEpochSecond(ZoneOffset.UTC)
         val nowEpochSeconds = end.toEpochSecond(ZoneOffset.UTC)
         return (nowEpochSeconds - startEpochSeconds).toInt()
     }
 
-    fun displayDifference(start: String, end: String): String {
-        val startDateTime = timestampToDateTime(start)
-        val endDateTime = timestampToDateTime(end)
+    fun displayDifference(start: LocalDateTime?, end: LocalDateTime?): String {
+        if (start == null || end == null) {
+            return ""
+        }
 
-        val seconds = calculateSecondsElapsed(startDateTime, endDateTime)
+        val seconds = calculateSecondsElapsed(start, end)
         return secondsToTime(seconds)
     }
 
@@ -148,5 +153,68 @@ class TimeRecordsViewModel @Inject constructor(
 
     fun clearSelectedRecord() {
         _state.update { it.copy(selectedRecord = null) }
+    }
+
+    fun deleteSelectedRecord() {
+        viewModelScope.launch {
+            val selectedRecord = state.value.selectedRecord ?: return@launch
+            useCases.deleteTimeRecord.execute(selectedRecord.id)
+            _state.update {
+                it.copy(
+                    timeRecords = useCases.getTimeRecords.execute(),
+                    selectedRecord = null
+                )
+            }
+        }
+    }
+
+    fun tagSelectedRecord(tag: String) {
+        viewModelScope.launch {
+            val selectedRecord = state.value.selectedRecord ?: return@launch
+            val timeRecord = useCases.tagTimeRecord.execute(selectedRecord.id, tag)
+            _state.update {
+                it.copy(
+                    timeRecords = useCases.getTimeRecords.execute(),
+                    selectedRecord = timeRecord
+                )
+            }
+        }
+    }
+
+    fun untagSelectedRecord(tag: String) {
+        viewModelScope.launch {
+            val selectedRecord = state.value.selectedRecord ?: return@launch
+            val timeRecord = useCases.untagTimeRecord.execute(selectedRecord.id, tag)
+            _state.update {
+                it.copy(
+                    timeRecords = useCases.getTimeRecords.execute(),
+                    selectedRecord = timeRecord
+                )
+            }
+        }
+    }
+
+    fun modifySelectedRecordDate(start: LocalDateTime?, end: LocalDateTime?) {
+        viewModelScope.launch {
+            var startTimestamp: Optional<String?> = Optional.Absent
+            var endTimestamp: Optional<String?> = Optional.Absent
+
+            if (start != null) {
+                startTimestamp = Optional.Present(start.format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'")))
+            }
+            if (end != null) {
+                endTimestamp = Optional.Present(end.format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'")))
+            }
+
+            val selectedRecord = state.value.selectedRecord ?: return@launch
+            val timeRecord = useCases.modifyTimeRecordDate.execute(selectedRecord.id,startTimestamp,endTimestamp)
+            Log.i("TimeRecordsViewModel", "modifySelectedRecordDate: $timeRecord")
+            _state.update {
+                it.copy(
+                    timeRecords = useCases.getTimeRecords.execute(),
+                    selectedRecord = timeRecord
+                )
+            }
+        }
     }
 }

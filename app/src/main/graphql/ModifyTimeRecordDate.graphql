@@ -1,0 +1,8 @@
+mutation modifyTimeRecordDate($id: ID!, $start: String, $end: String) {
+  modifyTimeRecordDate(id: $id, start: $start, end: $end) {
+    id
+    start
+    end
+    tags
+  }
+}

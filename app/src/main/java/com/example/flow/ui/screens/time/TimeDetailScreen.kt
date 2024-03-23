@@ -1,18 +1,61 @@
 package com.example.flow.ui.screens.time
 
+import android.app.TimePickerDialog
+import android.util.Log
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material3.Button
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TimePickerState
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import androidx.compose.ui.window.Dialog
+import kotlinx.coroutines.launch
+import java.util.Calendar
+import com.example.flow.ui.components.TimePickerDialog
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -20,27 +63,247 @@ fun TimeDetailScreen(
     navController: NavController,
     viewModel: TimeRecordsViewModel = hiltViewModel()
 ) {
-    Scaffold(
-        topBar = { TopAppBar(
-            title = { Text(text = "Time Detail") },
-            navigationIcon = {
-                IconButton(onClick = {
-                    navController.popBackStack()
-                    viewModel.clearSelectedRecord()
-                },
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    var showTimePicker by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var editingTime by remember { mutableStateOf("start")}
+    val startTimePickerState = rememberTimePickerState(
+        initialHour = state.selectedRecord?.startDateTime?.hour!!,
+        initialMinute = state.selectedRecord?.startDateTime?.minute!!
+    )
+    val endTimePickerState: TimePickerState = if (state.selectedRecord?.endDateTime != null) {
+        rememberTimePickerState(
+            initialHour = state.selectedRecord?.endDateTime?.hour!!,
+            initialMinute = state.selectedRecord?.endDateTime?.minute!!
+        )
+    } else {
+        rememberTimePickerState()
+    }
+
+    val snackState = remember { SnackbarHostState() }
+    val snackScope = rememberCoroutineScope()
+
+    val startDatePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = state.selectedRecord?.startDateTime?.toInstant(ZoneOffset.UTC)?.toEpochMilli()!!
+    )
+
+    val endDatePickerState = if (state.selectedRecord?.endDateTime != null) {
+        rememberDatePickerState(
+            initialSelectedDateMillis = state.selectedRecord?.endDateTime?.toInstant(ZoneOffset.UTC)?.toEpochMilli()!!
+        )
+    } else {
+        rememberDatePickerState()
+    }
+
+    if (showTimePicker) {
+        TimePickerDialog(
+            onCancel = { showTimePicker = false },
+            onConfirm = {
+                val cal = Calendar.getInstance()
+                cal.set(Calendar.HOUR_OF_DAY, startTimePickerState.hour)
+                cal.set(Calendar.MINUTE, startTimePickerState.minute)
+                cal.isLenient = false
+
+                val currentDate = if (editingTime == "start") state.selectedRecord?.startDateTime else state.selectedRecord?.endDateTime
+                val dateTime = if (editingTime == "start") {
+                    currentDate?.withHour(startTimePickerState.hour)?.withMinute(startTimePickerState.minute)
+                } else {
+                    currentDate?.withHour(endTimePickerState.hour)?.withMinute(endTimePickerState.minute)
                 }
-            }
 
-        ) },
-    ) {
-        padding ->
-        LazyColumn(contentPadding = padding) {
-            item {
-                Text("Time Detail Screen")
-            }
+                // If end time is before start time, show error
+                if (editingTime == "end" && dateTime?.isBefore(state.selectedRecord?.startDateTime) == true) {
+                    showTimePicker = false
+                    snackScope.launch {
+                        snackState.showSnackbar("End time cannot be before start time")
+                    }
+                    return@TimePickerDialog
+                }
 
+                // Set the time
+                if (editingTime == "start") {
+                    viewModel.modifySelectedRecordDate(dateTime, null)
+                } else {
+                    viewModel.modifySelectedRecordDate(null, dateTime)
+                }
+
+                showTimePicker = false
+            },
+        ) {
+            TimePicker(state = if (editingTime == "start") startTimePickerState else endTimePickerState)
         }
+    }
+
+    if (showDatePicker) {
+        DatePickerDialog(onDismissRequest = {
+            showDatePicker = false
+        },
+            confirmButton = {
+                Button(onClick = {
+                    if (editingTime == "start") {
+                        val newDate = LocalDateTime.ofInstant(Instant.ofEpochMilli(startDatePickerState.selectedDateMillis!!), ZoneOffset.UTC)
+                        // Set time to start time
+                        val time = state.selectedRecord?.startDateTime?.toLocalTime()
+                        val newDateTime = newDate.withHour(time?.hour!!).withMinute(time.minute)
+
+                        viewModel.modifySelectedRecordDate(newDateTime, null)
+                    } else {
+                        val newDate = LocalDateTime.ofInstant(Instant.ofEpochMilli(endDatePickerState.selectedDateMillis!!), ZoneOffset.UTC)
+                        // Set time to end time
+                        val time = state.selectedRecord?.endDateTime?.toLocalTime()
+                        val newDateTime = newDate.withHour(time?.hour!!).withMinute(time.minute)
+
+                        viewModel.modifySelectedRecordDate(null, newDateTime)
+                    }
+
+                    showDatePicker = false
+                }) {
+                    Text("OK")
+                }
+            },
+        ) {
+            DatePicker(
+                state = if (editingTime == "start") startDatePickerState else endDatePickerState
+            )
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(text = "Edit Entry") },
+                navigationIcon = {
+                    IconButton(
+                        onClick = {
+                            navController.popBackStack()
+                            viewModel.clearSelectedRecord()
+                        },
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                )
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackState)
+        },
+    ) { padding ->
+        LazyColumn(
+            contentPadding = padding, modifier = Modifier.padding(
+                top = 8.dp,
+                bottom = 8.dp,
+                start = 16.dp,
+                end = 16.dp
+            )
+        ) {
+            item {
+                Column {
+                    Text("Total time")
+                    Text(
+                        viewModel.displayDifference(
+                            state.selectedRecord?.startDateTime,
+                            state.selectedRecord?.endDateTime
+                        ),
+                        fontSize = 48.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Row(
+                        modifier = Modifier
+                            .padding(top = 16.dp)
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Start", fontWeight = FontWeight.Bold)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            FilledTonalButton(onClick = {
+                                editingTime = "start"
+                                showTimePicker = true
+                            }) {
+                                Icon(
+                                    Icons.Default.AccessTime,
+                                    contentDescription = "Select time",
+                                    modifier = Modifier
+                                        .padding(end = 8.dp)
+                                        .size(18.dp)
+                                )
+                                Text(
+                                    state.selectedRecord?.startDateTime?.toLocalTime()!!.format(
+                                        DateTimeFormatter.ofPattern("HH:mm")
+                                    ).toString(),
+                                )
+                            }
+                            FilledTonalButton(onClick = {
+                                editingTime = "start"
+                                showDatePicker = true
+                            }) {
+                                Icon(
+                                    Icons.Default.CalendarToday,
+                                    contentDescription = "Select date",
+                                    modifier = Modifier
+                                        .padding(end = 8.dp)
+                                        .size(18.dp)
+                                )
+                                Text(
+                                    state.selectedRecord?.startDateTime?.toLocalDate().toString(),
+                                )
+                            }
+                        }
+
+                    }
+
+                    if (state.selectedRecord?.endDateTime != null) {
+                        Row(
+                            modifier = Modifier
+                                .padding(top = 8.dp)
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("End", fontWeight = FontWeight.Bold)
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                FilledTonalButton(onClick = {
+                                    editingTime = "end"
+                                    showTimePicker = true
+                                }) {
+                                    Icon(
+                                        Icons.Default.AccessTime,
+                                        contentDescription = "Select time",
+                                        modifier = Modifier
+                                            .padding(end = 8.dp)
+                                            .size(18.dp)
+                                    )
+                                    Text(
+                                        state.selectedRecord?.endDateTime?.toLocalTime()!!.format(
+                                            DateTimeFormatter.ofPattern("HH:mm")
+                                        ).toString()
+                                    )
+                                }
+                                FilledTonalButton(onClick = {
+                                    editingTime = "end"
+                                    showDatePicker = true
+                                }) {
+                                    Icon(
+                                        Icons.Default.CalendarToday,
+                                        contentDescription = "Select date",
+                                        modifier = Modifier
+                                            .padding(end = 8.dp)
+                                            .size(18.dp)
+                                    )
+                                    Text(
+                                        state.selectedRecord?.endDateTime?.toLocalDate()!!.format(
+                                            DateTimeFormatter.ofPattern("dd.MM.yyyy")
+                                        ).toString()
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+
     }
 }

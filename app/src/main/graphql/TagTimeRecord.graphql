@@ -1,0 +1,8 @@
+mutation tagTimeRecord($id: ID!, $tag: String!) {
+  tagTimeRecord(id: $id, tag: $tag) {
+    id
+    start
+    end
+    tags
+  }
+}

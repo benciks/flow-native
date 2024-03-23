@@ -9,5 +9,5 @@ data class TimeRecordsState(
     val isTracking: Boolean = false,
     val selectedRecord: TimeRecord? = null,
     val currentTimeSeconds: Int = 0,
-    val startedAt: String = ""
+    val startedAt: String? = null,
 )
