@@ -18,13 +18,13 @@ fun BottomNav(navController: NavHostController) {
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentDestination = navBackStackEntry?.destination
-        items.forEach { screen ->
+        items.forEach { item ->
             NavigationBarItem(
-                icon = { Icon(screen.icon, contentDescription = null) },
-                label = { Text(screen.label) },
-                selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                icon = { Icon(item.screen.icon, contentDescription = null) },
+                label = { Text(item.screen.label) },
+                selected = currentDestination?.hierarchy?.any { it.route == item.route } == true,
                 onClick = {
-                    navController.navigate(screen.route) {
+                    navController.navigate(item.screen.route) {
                         popUpTo(navController.graph.findStartDestination().id) {
                             saveState = true
                         }

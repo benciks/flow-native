@@ -29,6 +29,7 @@ import com.example.flow.ui.components.BottomNav
 import com.example.flow.ui.Screen
 import com.example.flow.ui.screens.time.TimeDetailScreen
 import com.example.flow.ui.screens.time.TimeRecordsViewModel
+import com.example.flow.ui.screens.time.TimeTagsScreen
 import com.example.flow.ui.theme.Gray100
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -59,6 +60,10 @@ class MainActivity : ComponentActivity() {
                                 composable(Screen.TimeDetail.route) {
                                     val viewModel = it.sharedViewModel<TimeRecordsViewModel>(navController)
                                     TimeDetailScreen(navController,viewModel)
+                                }
+                                composable(Screen.TimeTags.route) {
+                                    val viewModel = it.sharedViewModel<TimeRecordsViewModel>(navController)
+                                    TimeTagsScreen(navController,viewModel)
                                 }
                             }
 

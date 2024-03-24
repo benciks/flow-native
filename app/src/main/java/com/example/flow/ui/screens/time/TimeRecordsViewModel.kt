@@ -33,7 +33,13 @@ class TimeRecordsViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true) }
 
             val timeRecords = useCases.getTimeRecords.execute()
-            _state.update { it.copy(timeRecords = timeRecords, isLoading = false) }
+            val recentTags = timeRecords.flatMap { it.tags }.distinct()
+            _state.update {
+                it.copy(
+                    timeRecords = timeRecords,
+                    isLoading = false,
+                    recentTags = recentTags
+                ) }
 
             restartTimerIfRunning(timeRecords)
         }

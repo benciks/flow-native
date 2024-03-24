@@ -10,4 +10,5 @@ data class TimeRecordsState(
     val selectedRecord: TimeRecord? = null,
     val currentTimeSeconds: Int = 0,
     val startedAt: String? = null,
+    val recentTags: List<String> = emptyList(),
 )
