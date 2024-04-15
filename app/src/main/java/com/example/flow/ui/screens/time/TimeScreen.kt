@@ -21,9 +21,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -40,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.flow.domain.model.TimeRecord
 import com.example.flow.ui.theme.Gray500
@@ -77,7 +80,9 @@ fun TimeScreen(
                         stopTimer = viewModel::stopTimer,
                         currentTime = state.currentTimeSeconds,
                         secondsToTime = viewModel::secondsToTime,
-                        startedAt = state.startedAt
+                        startedAt = state.startedAt,
+                        navController = navController,
+                        selectCurrentRecord = viewModel::selectCurrentRecord
                     )
                 }
                 item {
@@ -95,14 +100,6 @@ fun TimeScreen(
                             fontWeight = FontWeight.Bold,
                             color = Color.Black
                         )
-                        Button(onClick = { /*TODO*/ }) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = "Add",
-                                modifier = Modifier.padding(end = 4.dp)
-                            )
-                            Text(text = "Create")
-                        }
                     }
                 }
                 items(state.timeRecords, key = { it.start }) {
@@ -129,7 +126,9 @@ fun TimerHeader(
     stopTimer: () -> Unit = {},
     currentTime: Int = 0,
     secondsToTime: (Int) -> String = { it.toString() },
-    startedAt: String? = null
+    startedAt: String? = null,
+    navController: NavHostController,
+    selectCurrentRecord: () -> Unit = {}
 ) {
     Box(
         modifier = Modifier
@@ -167,6 +166,21 @@ fun TimerHeader(
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold
                 )
+
+                FilledTonalButton(
+                    modifier = Modifier.padding(top = 8.dp),
+                    onClick = {
+                        selectCurrentRecord()
+                        navController.navigate("time_tags")
+
+                    }) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = "Add Tag",
+                        modifier = Modifier.padding(end = 4.dp)
+                    )
+                    Text(text = "Modify tags")
+                }
             } else {
                 Text(
                     text = "No active tracking",
@@ -191,7 +205,7 @@ fun TimeRecordItem(
         onClick = {
             onSelectItem(record)
             navController.navigate("time_detail")
-                  },
+        },
         modifier = Modifier
             .fillMaxWidth()
             .clip(shape = RoundedCornerShape(12.dp))
@@ -243,7 +257,11 @@ fun TimeRecordItem(
                 }
                 if (record.end.isNotEmpty()) {
                     Column {
-                        Text(text = displayDifference(record.startDateTime ,record.endDateTime), fontSize = 16.sp, color = Gray500)
+                        Text(
+                            text = displayDifference(record.startDateTime, record.endDateTime),
+                            fontSize = 16.sp,
+                            color = Gray500
+                        )
                     }
                 }
             }

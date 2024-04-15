@@ -26,7 +26,10 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
     compileOptions {
@@ -53,6 +56,9 @@ android {
 dependencies {
     // Graphql
     implementation("com.apollographql.apollo3:apollo-runtime:3.8.2")
+
+    // Swipe
+    implementation("me.saket.swipe:swipe:1.3.0")
 
     // Lifecycle
     val lifecycle_version = "2.7.0"

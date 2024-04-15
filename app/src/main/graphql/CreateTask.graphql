@@ -1,0 +1,15 @@
+mutation CreateTask($description: String!, $project: String, $priority: String) {
+    createTask(description: $description, project: $project, priority: $priority) {
+        id
+        description
+        entry
+        modified
+        uuid
+        urgency
+        status
+        due
+        priority
+        project
+        tags
+    }
+}

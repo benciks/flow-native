@@ -1,0 +1,15 @@
+query Tasks {
+    tasks {
+        id
+        uuid
+        description
+        modified
+        entry
+        urgency
+        status
+        due
+        priority
+        project
+        tags
+    }
+}

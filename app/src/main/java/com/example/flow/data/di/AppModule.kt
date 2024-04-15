@@ -6,8 +6,13 @@ import com.apollographql.apollo3.cache.normalized.api.MemoryCacheFactory
 import com.apollographql.apollo3.cache.normalized.fetchPolicy
 import com.apollographql.apollo3.cache.normalized.normalizedCache
 import com.apollographql.apollo3.network.okHttpClient
+import com.example.flow.data.network.ApolloTasksClient
 import com.example.flow.data.network.ApolloTimeRecordClient
+import com.example.flow.domain.network.TasksClient
 import com.example.flow.domain.network.TimeRecordsClient
+import com.example.flow.domain.use_case.task.CreateTaskUseCase
+import com.example.flow.domain.use_case.task.GetTasksUseCase
+import com.example.flow.domain.use_case.task.TasksUseCases
 import com.example.flow.domain.use_case.time.DeleteTimeRecordUseCase
 import com.example.flow.domain.use_case.time.GetTimeRecordUseCase
 import com.example.flow.domain.use_case.time.ModifyTimeRecordDateUseCase
@@ -63,6 +68,21 @@ object AppModule {
             ModifyTimeRecordDateUseCase(timeRecordsClient),
             TagTimeRecordUseCase(timeRecordsClient),
             UntagTimeRecordUseCase(timeRecordsClient)
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideTasksClient(apolloClient: ApolloClient): TasksClient {
+        return ApolloTasksClient(apolloClient)
+    }
+
+    @Provides
+    @Singleton
+    fun provideTasksUseCases(tasksClient: TasksClient): TasksUseCases {
+        return TasksUseCases(
+            GetTasksUseCase(tasksClient),
+            CreateTaskUseCase(tasksClient)
         )
     }
 }

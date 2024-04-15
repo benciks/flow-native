@@ -21,12 +21,12 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.example.flow.ui.screens.CalendarScreen
-import com.example.flow.ui.screens.ProfileScreen
-import com.example.flow.ui.screens.TaskScreen
 import com.example.flow.ui.screens.time.TimeScreen
 import com.example.flow.ui.theme.FlowTheme
 import com.example.flow.ui.components.BottomNav
 import com.example.flow.ui.Screen
+import com.example.flow.ui.screens.ProfileScreen
+import com.example.flow.ui.screens.tasks.TasksScreen
 import com.example.flow.ui.screens.time.TimeDetailScreen
 import com.example.flow.ui.screens.time.TimeRecordsViewModel
 import com.example.flow.ui.screens.time.TimeTagsScreen
@@ -48,26 +48,39 @@ class MainActivity : ComponentActivity() {
                     Scaffold(
                         bottomBar = { BottomNav(navController) },
                     ) { innerPadding ->
-                        NavHost(navController, startDestination = "time", Modifier.padding(innerPadding)) {
+                        NavHost(
+                            navController,
+                            startDestination = "time",
+                            Modifier.padding(innerPadding)
+                        ) {
                             navigation(
                                 startDestination = Screen.Time.route,
                                 route = "time"
                             ) {
                                 composable(Screen.Time.route) {
-                                    val viewModel = it.sharedViewModel<TimeRecordsViewModel>(navController)
-                                    TimeScreen(navController,viewModel)
+                                    val viewModel =
+                                        it.sharedViewModel<TimeRecordsViewModel>(navController)
+                                    TimeScreen(navController, viewModel)
                                 }
                                 composable(Screen.TimeDetail.route) {
-                                    val viewModel = it.sharedViewModel<TimeRecordsViewModel>(navController)
-                                    TimeDetailScreen(navController,viewModel)
+                                    val viewModel =
+                                        it.sharedViewModel<TimeRecordsViewModel>(navController)
+                                    TimeDetailScreen(navController, viewModel)
                                 }
                                 composable(Screen.TimeTags.route) {
-                                    val viewModel = it.sharedViewModel<TimeRecordsViewModel>(navController)
-                                    TimeTagsScreen(navController,viewModel)
+                                    val viewModel =
+                                        it.sharedViewModel<TimeRecordsViewModel>(navController)
+                                    TimeTagsScreen(navController, viewModel)
                                 }
                             }
 
-                            composable(Screen.Tasks.route) { TaskScreen(navController) }
+                            navigation(
+                                startDestination = Screen.Tasks.route,
+                                route = "task"
+                            ) {
+                                composable(Screen.Tasks.route) { TasksScreen(navController) }
+                            }
+
                             composable(Screen.Calendar.route) { CalendarScreen(navController) }
                             composable(Screen.Profile.route) { ProfileScreen(navController) }
                         }
@@ -79,7 +92,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-inline fun <reified T : ViewModel>NavBackStackEntry.sharedViewModel(navController: NavController): T {
+inline fun <reified T : ViewModel> NavBackStackEntry.sharedViewModel(navController: NavController): T {
     val navGraphRoute = destination.parent?.route ?: return hiltViewModel<T>()
     val parentEntry = remember(this) {
         navController.getBackStackEntry(navGraphRoute)

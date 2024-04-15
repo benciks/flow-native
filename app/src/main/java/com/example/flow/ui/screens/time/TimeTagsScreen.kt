@@ -131,19 +131,24 @@ fun TimeTagsScreen(
                 }
             }
 
+
+            // TODO: Filter tags that are already selected
             LazyColumn(
                 modifier = Modifier.padding(top = 16.dp)
             ) {
                 for (tag in state.recentTags) {
-                    item {
-                        ClickableText(
-                            modifier = Modifier.padding(top = 16.dp, bottom = 16.dp),
-                            text = AnnotatedString(tag),
-                            onClick = { viewModel.tagSelectedRecord(tag) })
-                        Divider()
+                    if (tag !in state.selectedRecord?.tags!!) {
+                        item {
+                            ClickableText(
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .fillMaxWidth(),
+                                text = AnnotatedString(tag),
+                                onClick = { viewModel.tagSelectedRecord(tag) })
+                            Divider()
+                        }
                     }
                 }
-
             }
         }
     }

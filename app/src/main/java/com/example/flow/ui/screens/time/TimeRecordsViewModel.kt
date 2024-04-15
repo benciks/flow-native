@@ -39,7 +39,8 @@ class TimeRecordsViewModel @Inject constructor(
                     timeRecords = timeRecords,
                     isLoading = false,
                     recentTags = recentTags
-                ) }
+                )
+            }
 
             restartTimerIfRunning(timeRecords)
         }
@@ -50,7 +51,10 @@ class TimeRecordsViewModel @Inject constructor(
             return "-"
         }
 
-        Log.i("TimeRecordsViewModel", "toDisplayDateTime: ${date.toLocalDate()} ${LocalDateTime.now().toLocalDate()}")
+        Log.i(
+            "TimeRecordsViewModel",
+            "toDisplayDateTime: ${date.toLocalDate()} ${LocalDateTime.now().toLocalDate()}"
+        )
 
 
         // If today, display time only
@@ -79,11 +83,14 @@ class TimeRecordsViewModel @Inject constructor(
                 )
             }
 
-            startTimer()
+            updateTimer()
         }
     }
 
-    private fun calculateSecondsElapsed(start: LocalDateTime?, end: LocalDateTime? = LocalDateTime.now()): Int {
+    private fun calculateSecondsElapsed(
+        start: LocalDateTime?,
+        end: LocalDateTime? = LocalDateTime.now()
+    ): Int {
         if (start == null || end == null) {
             return 0
         }
@@ -157,6 +164,13 @@ class TimeRecordsViewModel @Inject constructor(
         _state.update { it.copy(selectedRecord = record) }
     }
 
+    fun selectCurrentRecord() {
+        val currentRecord = state.value.timeRecords.find { it.end.isBlank() }
+        if (currentRecord != null) {
+            onSelectRecord(currentRecord)
+        }
+    }
+
     fun clearSelectedRecord() {
         _state.update { it.copy(selectedRecord = null) }
     }
@@ -206,14 +220,20 @@ class TimeRecordsViewModel @Inject constructor(
             var endTimestamp: Optional<String?> = Optional.Absent
 
             if (start != null) {
-                startTimestamp = Optional.Present(start.format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'")))
+                startTimestamp =
+                    Optional.Present(start.format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'")))
             }
             if (end != null) {
-                endTimestamp = Optional.Present(end.format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'")))
+                endTimestamp =
+                    Optional.Present(end.format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'")))
             }
 
             val selectedRecord = state.value.selectedRecord ?: return@launch
-            val timeRecord = useCases.modifyTimeRecordDate.execute(selectedRecord.id,startTimestamp,endTimestamp)
+            val timeRecord = useCases.modifyTimeRecordDate.execute(
+                selectedRecord.id,
+                startTimestamp,
+                endTimestamp
+            )
             Log.i("TimeRecordsViewModel", "modifySelectedRecordDate: $timeRecord")
             _state.update {
                 it.copy(
