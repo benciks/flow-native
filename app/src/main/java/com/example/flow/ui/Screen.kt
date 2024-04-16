@@ -8,7 +8,7 @@ import androidx.compose.material.icons.filled.Timer
 import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class Screen(val route: String, val icon: ImageVector, val label: String) {
-    data object Time : Screen("time_list", Icons.Filled.Timer, "Time")
+    data object Time : Screen("time_list", Icons.Default.Timer, "Time")
     data object TimeDetail : Screen("time_detail", Icons.Filled.Timer, "Time Detail")
     data object TimeTags : Screen("time_tags", Icons.Filled.Timer, "Time Tags")
     data object Tasks : Screen("tasks", Icons.Filled.Task, "Tasks")

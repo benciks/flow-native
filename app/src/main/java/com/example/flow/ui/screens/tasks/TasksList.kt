@@ -15,13 +15,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Chip
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.TextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BottomSheetDefaults
@@ -29,10 +27,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedCard
@@ -40,6 +40,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TimeInput
 import androidx.compose.material3.TimePicker
@@ -93,9 +94,11 @@ fun TasksScreen(
     var showSheet by remember { mutableStateOf(false) }
 
     if (showSheet) {
-        CreateTaskDescriptionSheet(onDismiss = { showSheet = false }, onCreate = {
-            viewModel.createTask(it)
-        })
+        CreateTaskDescriptionSheet(
+            onDismiss = { showSheet = false },
+            onCreate = { description, due ->
+                viewModel.createTask(description, due)
+            })
     }
 
     Scaffold(
@@ -220,7 +223,10 @@ fun TaskItem(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateTaskDescriptionSheet(onDismiss: () -> Unit, onCreate: (String) -> Unit = {}) {
+fun CreateTaskDescriptionSheet(
+    onDismiss: () -> Unit,
+    onCreate: (description: String, due: LocalDateTime?) -> Unit
+) {
     val modalState = rememberModalBottomSheetState()
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -229,12 +235,13 @@ fun CreateTaskDescriptionSheet(onDismiss: () -> Unit, onCreate: (String) -> Unit
     )
     {
         var text by remember { mutableStateOf("") }
-        val focusRequester = remember { FocusRequester() }
         val scope = rememberCoroutineScope()
         val keyboardController = LocalSoftwareKeyboardController.current
 
         val dateSheet = remember { mutableStateOf(false) }
         val timeSheet = remember { mutableStateOf(false) }
+
+        val selectedDueDate = remember { mutableStateOf<LocalDateTime?>(null) }
 
         if (dateSheet.value) {
             CreateTaskDateSheet(onDismiss = {
@@ -244,6 +251,7 @@ fun CreateTaskDescriptionSheet(onDismiss: () -> Unit, onCreate: (String) -> Unit
                 }
             },
                 onCreate = {
+                    selectedDueDate.value = it
                     scope.launch {
                         dateSheet.value = false
                         timeSheet.value = true
@@ -259,11 +267,13 @@ fun CreateTaskDescriptionSheet(onDismiss: () -> Unit, onCreate: (String) -> Unit
                 }
             },
                 onCreate = {
-//                    scope.launch {
-//                        timeSheet.value = false
-//                        onCreate(text)
-//                        onDismiss()
-//                    }
+                    // Set the time of the selectedDueDate
+                    selectedDueDate.value =
+                        selectedDueDate.value?.withHour(it.hour)?.withMinute(it.minute)
+                    scope.launch {
+                        timeSheet.value = false
+                        modalState.show()
+                    }
                 })
         }
 
@@ -283,20 +293,14 @@ fun CreateTaskDescriptionSheet(onDismiss: () -> Unit, onCreate: (String) -> Unit
                     ),
                     maxLines = 1,
                     modifier = Modifier
-                        .focusRequester(focusRequester)
                         .fillMaxWidth()
                         .padding(0.dp)
                 )
 
-                if (modalState.isVisible) {
-                    LaunchedEffect(Unit) {
-                        focusRequester.requestFocus()
-                    }
-                }
             }
-            FilledTonalButton(onClick = {
+            Button(onClick = {
                 scope.launch {
-                    onCreate(text)
+                    onCreate(text, selectedDueDate.value)
                     onDismiss()
                 }
             }, content = {
@@ -310,18 +314,26 @@ fun CreateTaskDescriptionSheet(onDismiss: () -> Unit, onCreate: (String) -> Unit
             )
         }
 
-        IconButton(onClick = {
+        TextButton(onClick = {
             scope.launch {
                 keyboardController?.hide()
                 modalState.hide()
                 dateSheet.value = true
             }
-        }) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Add"
-            )
-        }
+        },
+            content = {
+                Icon(
+                    imageVector = Icons.Default.Event,
+                    contentDescription = "Add due date",
+                    modifier = Modifier.padding(end = 4.dp)
+                )
+                if (selectedDueDate.value != null) {
+                    Text(text = selectedDueDate.value!!.format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")))
+                } else {
+                    Text(text = "Add due date")
+                }
+            }
+        )
 
 
     }

@@ -1,5 +1,5 @@
-mutation CreateTask($description: String!, $project: String, $priority: String) {
-    createTask(description: $description, project: $project, priority: $priority) {
+mutation CreateTask($description: String!, $project: String, $priority: String, $due: String) {
+    createTask(description: $description, project: $project, priority: $priority, due: $due) {
         id
         description
         entry

@@ -1,6 +1,7 @@
 package com.example.flow.data.network
 
 import com.apollographql.apollo3.ApolloClient
+import com.apollographql.apollo3.api.Optional
 import com.example.flow.CreateTaskMutation
 import com.example.flow.TasksQuery
 import com.example.flow.domain.model.Task
@@ -17,9 +18,9 @@ class ApolloTasksClient(
             .data?.tasks?.map { it.toTask() } ?: emptyList()
     }
 
-    override suspend fun createTask(description: String): Task {
+    override suspend fun createTask(description: String, due: Optional<String>): Task {
         return apolloClient
-            .mutation(CreateTaskMutation(description))
+            .mutation(CreateTaskMutation(description, due = due))
             .execute()
             .data?.createTask?.toTask() ?: throw IllegalStateException("Task not created")
     }

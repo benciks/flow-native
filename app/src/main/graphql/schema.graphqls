@@ -22,7 +22,7 @@ type Mutation {
   modifyTimeRecordDate(id: ID!, start: String, end: String): TimeRecord!
   tagTimeRecord(id: ID!, tag: String!): TimeRecord!
   untagTimeRecord(id: ID!, tag: String!): TimeRecord!
-  createTask(description: String!, project: String, priority: String): Task!
+  createTask(description: String!, project: String, priority: String, due: String): Task!
 }
 
 type Query {
