@@ -25,8 +25,11 @@ import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -89,14 +93,14 @@ fun TimeScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 16.dp, bottom = 12.dp),
+                            .padding(top = 24.dp, bottom = 12.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
 
                         Text(
                             text = "Time Records",
-                            fontSize = 24.sp,
+                            fontSize = MaterialTheme.typography.headlineMedium.fontSize,
                             fontWeight = FontWeight.Bold,
                             color = Color.Black
                         )
@@ -134,7 +138,7 @@ fun TimerHeader(
         modifier = Modifier
             .fillMaxWidth()
             .clip(shape = RoundedCornerShape(12.dp))
-            .background(color = Primary)
+            .background(color = MaterialTheme.colorScheme.primaryContainer)
             .animateContentSize(),
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
@@ -144,9 +148,9 @@ fun TimerHeader(
             ) {
                 Text(
                     text = secondsToTime(currentTime),
-                    color = Color.Black,
-                    fontSize = 48.sp,
-                    fontWeight = FontWeight.SemiBold
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    fontSize = MaterialTheme.typography.displayLarge.fontSize,
+                    fontWeight = FontWeight.Bold
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(
@@ -162,8 +166,8 @@ fun TimerHeader(
             if (isTracking) {
                 Text(
                     text = "Started at $startedAt",
-                    color = Color.Black,
-                    fontSize = 16.sp,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                     fontWeight = FontWeight.SemiBold
                 )
 
@@ -184,8 +188,8 @@ fun TimerHeader(
             } else {
                 Text(
                     text = "No active tracking",
-                    color = Color.Black,
-                    fontSize = 16.sp,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                     fontWeight = FontWeight.SemiBold
                 )
             }
@@ -201,15 +205,11 @@ fun TimeRecordItem(
     navController: NavHostController,
     onSelectItem: (timeRecord: TimeRecord) -> Unit = {}
 ) {
-    Card(
+    OutlinedCard(
         onClick = {
             onSelectItem(record)
             navController.navigate("time_detail")
         },
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(shape = RoundedCornerShape(12.dp))
-            .background(color = Color.White)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -220,36 +220,36 @@ fun TimeRecordItem(
                     Row {
                         Text(
                             text = "Start:",
-                            color = Gray600,
-                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = MaterialTheme.typography.bodyMedium.fontSize,
                             modifier = Modifier.width(56.dp)
                         )
                         Text(
                             text = toDisplayDateTime(record.startDateTime),
-                            color = Color.Black,
-                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = MaterialTheme.typography.bodyMedium.fontSize,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
                     Row {
                         Text(
                             text = "End:",
-                            color = Gray600,
-                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = MaterialTheme.typography.bodyMedium.fontSize,
                             modifier = Modifier.width(56.dp)
                         )
                         if (record.end.isEmpty()) {
                             Text(
                                 text = "Ongoing",
-                                color = Gray600,
-                                fontSize = 16.sp,
+                                color = Primary,
+                                fontSize = MaterialTheme.typography.bodyMedium.fontSize,
                                 fontWeight = FontWeight.SemiBold
                             )
                         } else {
                             Text(
                                 text = toDisplayDateTime(record.endDateTime),
-                                color = Color.Black,
-                                fontSize = 16.sp,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontSize = MaterialTheme.typography.bodyMedium.fontSize,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
@@ -259,8 +259,8 @@ fun TimeRecordItem(
                     Column {
                         Text(
                             text = displayDifference(record.startDateTime, record.endDateTime),
-                            fontSize = 16.sp,
-                            color = Gray500
+                            fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
                     }
                 }
@@ -275,13 +275,14 @@ fun TimeRecordItem(
                     record.tags.forEach {
                         Box(
                             modifier = Modifier
-                                .clip(shape = RoundedCornerShape(8.dp))
-                                .background(color = Color.Black)
+                                .clip(shape = MaterialTheme.shapes.large)
+                                .background(color = MaterialTheme.colorScheme.tertiaryContainer)
                         ) {
                             Text(
                                 text = it,
-                                fontSize = 14.sp,
-                                color = Color.White,
+                                fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                fontWeight = FontWeight.SemiBold,
                                 modifier = Modifier.padding(6.dp, 2.dp)
                             )
                         }

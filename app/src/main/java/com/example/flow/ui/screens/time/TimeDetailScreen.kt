@@ -193,17 +193,21 @@ fun TimeDetailScreen(
     val openAlertDialog = remember { mutableStateOf(false) }
     if (openAlertDialog.value) {
         Dialog(onDismissRequest = { openAlertDialog.value = false }) {
-            Box(modifier = Modifier
-                .clip(MaterialTheme.shapes.medium)
-                .background(MaterialTheme.colorScheme.background)) {
+            Box(
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(MaterialTheme.colorScheme.background)
+            ) {
                 Column(
                     modifier = Modifier.padding(16.dp)
 
                 ) {
                     Text("Are you sure you want to delete this entry?")
-                    Row(modifier = Modifier
-                        .padding(top = 16.dp)
-                        .fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Row(
+                        modifier = Modifier
+                            .padding(top = 16.dp)
+                            .fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
                         OutlinedButton(onClick = {
                             openAlertDialog.value = false
                         }) {
@@ -267,7 +271,7 @@ fun TimeDetailScreen(
                             state.selectedRecord?.startDateTime,
                             state.selectedRecord?.endDateTime
                         ),
-                        fontSize = 48.sp,
+                        fontSize = MaterialTheme.typography.displayLarge.fontSize,
                         fontWeight = FontWeight.Bold
                     )
 
@@ -289,7 +293,7 @@ fun TimeDetailScreen(
                                     contentDescription = "Select time",
                                     modifier = Modifier
                                         .padding(end = 8.dp)
-                                        .size(18.dp)
+                                        .size(16.dp)
                                 )
                                 Text(
                                     state.selectedRecord?.startDateTime?.toLocalTime()!!.format(
@@ -306,7 +310,7 @@ fun TimeDetailScreen(
                                     contentDescription = "Select date",
                                     modifier = Modifier
                                         .padding(end = 8.dp)
-                                        .size(18.dp)
+                                        .size(16.dp)
                                 )
                                 Text(
                                     state.selectedRecord?.startDateTime?.toLocalDate()!!.format(
@@ -337,7 +341,7 @@ fun TimeDetailScreen(
                                         contentDescription = "Select time",
                                         modifier = Modifier
                                             .padding(end = 8.dp)
-                                            .size(18.dp)
+                                            .size(16.dp)
                                     )
                                     Text(
                                         state.selectedRecord?.endDateTime?.toLocalTime()!!.format(
@@ -354,7 +358,7 @@ fun TimeDetailScreen(
                                         contentDescription = "Select date",
                                         modifier = Modifier
                                             .padding(end = 8.dp)
-                                            .size(18.dp)
+                                            .size(16.dp)
                                     )
                                     Text(
                                         state.selectedRecord?.endDateTime?.toLocalDate()!!.format(
@@ -377,10 +381,12 @@ fun TimeDetailScreen(
                         Button(onClick = {
                             navController.navigate("time_tags")
                         }) {
-                            Icon(Icons.Default.Tag, contentDescription = "Edit tags",
+                            Icon(
+                                Icons.Default.Tag, contentDescription = "Edit tags",
                                 Modifier
                                     .size(24.dp)
-                                    .padding(end = 8.dp))
+                                    .padding(end = 8.dp)
+                            )
                             Text("Edit tags")
                         }
                     }
@@ -392,9 +398,15 @@ fun TimeDetailScreen(
                                     modifier = Modifier
                                         .padding(end = 8.dp)
                                         .clip(MaterialTheme.shapes.large)
-                                        .background(MaterialTheme.colorScheme.onBackground)
+                                        .background(MaterialTheme.colorScheme.tertiaryContainer)
                                 ) {
-                                    Text(tag, color = MaterialTheme.colorScheme.background, fontSize = 14.sp, modifier = Modifier.padding(8.dp, 2.dp))
+                                    Text(
+                                        tag,
+                                        color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                        fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                                        fontWeight = FontWeight.SemiBold,
+                                        modifier = Modifier.padding(8.dp, 2.dp)
+                                    )
                                 }
                             }
                         } else {

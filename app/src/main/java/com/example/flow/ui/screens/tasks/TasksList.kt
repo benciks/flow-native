@@ -29,11 +29,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -132,7 +134,7 @@ fun TasksScreen(
 
                         Text(
                             text = "Tasks",
-                            fontSize = 24.sp,
+                            fontSize = MaterialTheme.typography.headlineMedium.fontSize,
                             fontWeight = FontWeight.Bold,
                             color = Color.Black
                         )
@@ -173,14 +175,10 @@ fun TaskItem(
     ),
     onClick: () -> Unit = {}
 ) {
-    Card(
+    OutlinedCard(
         onClick = {
             onClick()
         },
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(shape = RoundedCornerShape(12.dp))
-            .background(color = Color.White)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -190,7 +188,7 @@ fun TaskItem(
             ) {
                 Text(
                     text = task.description,
-                    fontSize = 16.sp,
+                    fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                     fontWeight = FontWeight.Bold,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
@@ -201,9 +199,9 @@ fun TaskItem(
                 Badge(
                     content = { Text(text = task.status) },
                     containerColor = when (task.status) {
-                        "pending" -> MaterialTheme.colorScheme.secondary
-                        "completed" -> MaterialTheme.colorScheme.primary
-                        else -> MaterialTheme.colorScheme.error
+                        "pending" -> MaterialTheme.colorScheme.secondaryContainer
+                        "completed" -> MaterialTheme.colorScheme.primaryContainer
+                        else -> MaterialTheme.colorScheme.errorContainer
                     }
                 )
             }
