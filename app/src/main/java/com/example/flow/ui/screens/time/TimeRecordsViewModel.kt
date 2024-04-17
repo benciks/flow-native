@@ -4,8 +4,8 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.apollographql.apollo3.api.Optional
-import com.example.flow.domain.model.TimeRecord
-import com.example.flow.domain.use_case.time.TimeRecordUseCases
+import com.example.flow.data.model.TimeRecord
+import com.example.flow.data.repository.TimeRecordRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,7 +18,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class TimeRecordsViewModel @Inject constructor(
-    private val useCases: TimeRecordUseCases
+    private val timeRecordsRepository: TimeRecordRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(TimeRecordsState())
@@ -32,7 +32,7 @@ class TimeRecordsViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
 
-            val timeRecords = useCases.getTimeRecords.execute()
+            val timeRecords = timeRecordsRepository.getTimeRecords()
             val recentTags = timeRecords.flatMap { it.tags }.distinct()
             _state.update {
                 it.copy(
@@ -110,12 +110,12 @@ class TimeRecordsViewModel @Inject constructor(
 
     fun startTimer() {
         viewModelScope.launch {
-            useCases.startTimer.execute()
+            timeRecordsRepository.startTimer()
 
             _state.update {
                 it.copy(
                     isTracking = true,
-                    timeRecords = useCases.getTimeRecords.execute(),
+                    timeRecords = timeRecordsRepository.getTimeRecords(),
                     startedAt = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
                 )
             }
@@ -137,10 +137,10 @@ class TimeRecordsViewModel @Inject constructor(
 
     fun stopTimer() {
         viewModelScope.launch {
-            useCases.stopTimer.execute()
+            timeRecordsRepository.stopTimer()
             _state.update {
                 it.copy(
-                    timeRecords = useCases.getTimeRecords.execute(),
+                    timeRecords = timeRecordsRepository.getTimeRecords(),
                     isTracking = false,
                     currentTimeSeconds = 0
                 )
@@ -178,10 +178,10 @@ class TimeRecordsViewModel @Inject constructor(
     fun deleteSelectedRecord() {
         viewModelScope.launch {
             val selectedRecord = state.value.selectedRecord ?: return@launch
-            useCases.deleteTimeRecord.execute(selectedRecord.id)
+            timeRecordsRepository.deleteTimeRecord(selectedRecord.id)
             _state.update {
                 it.copy(
-                    timeRecords = useCases.getTimeRecords.execute(),
+                    timeRecords = timeRecordsRepository.getTimeRecords(),
                     selectedRecord = null
                 )
             }
@@ -191,10 +191,10 @@ class TimeRecordsViewModel @Inject constructor(
     fun tagSelectedRecord(tag: String) {
         viewModelScope.launch {
             val selectedRecord = state.value.selectedRecord ?: return@launch
-            val timeRecord = useCases.tagTimeRecord.execute(selectedRecord.id, tag)
+            val timeRecord = timeRecordsRepository.tagTimeRecord(selectedRecord.id, tag)
             _state.update {
                 it.copy(
-                    timeRecords = useCases.getTimeRecords.execute(),
+                    timeRecords = timeRecordsRepository.getTimeRecords(),
                     selectedRecord = timeRecord
                 )
             }
@@ -204,10 +204,10 @@ class TimeRecordsViewModel @Inject constructor(
     fun untagSelectedRecord(tag: String) {
         viewModelScope.launch {
             val selectedRecord = state.value.selectedRecord ?: return@launch
-            val timeRecord = useCases.untagTimeRecord.execute(selectedRecord.id, tag)
+            val timeRecord = timeRecordsRepository.untagTimeRecord(selectedRecord.id, tag)
             _state.update {
                 it.copy(
-                    timeRecords = useCases.getTimeRecords.execute(),
+                    timeRecords = timeRecordsRepository.getTimeRecords(),
                     selectedRecord = timeRecord
                 )
             }
@@ -229,7 +229,7 @@ class TimeRecordsViewModel @Inject constructor(
             }
 
             val selectedRecord = state.value.selectedRecord ?: return@launch
-            val timeRecord = useCases.modifyTimeRecordDate.execute(
+            val timeRecord = timeRecordsRepository.modifyTimeRecordDate(
                 selectedRecord.id,
                 startTimestamp,
                 endTimestamp
@@ -237,7 +237,7 @@ class TimeRecordsViewModel @Inject constructor(
             Log.i("TimeRecordsViewModel", "modifySelectedRecordDate: $timeRecord")
             _state.update {
                 it.copy(
-                    timeRecords = useCases.getTimeRecords.execute(),
+                    timeRecords = timeRecordsRepository.getTimeRecords(),
                     selectedRecord = timeRecord
                 )
             }

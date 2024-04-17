@@ -48,7 +48,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.example.flow.domain.model.TimeRecord
+import com.example.flow.data.model.TimeRecord
 import com.example.flow.ui.theme.Gray500
 import com.example.flow.ui.theme.Gray600
 import com.example.flow.ui.theme.Primary

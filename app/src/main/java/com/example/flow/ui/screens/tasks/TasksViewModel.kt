@@ -3,7 +3,7 @@ package com.example.flow.ui.screens.tasks
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.apollographql.apollo3.api.Optional
-import com.example.flow.domain.use_case.task.TasksUseCases
+import com.example.flow.data.repository.TaskRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,7 +15,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class TasksViewModel @Inject constructor(
-    private val useCases: TasksUseCases
+    private val tasksRepository: TaskRepository
 ) : ViewModel() {
     private val _state = MutableStateFlow(TasksState())
     val state = _state.asStateFlow()
@@ -28,7 +28,7 @@ class TasksViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
 
-            val tasks = useCases.getTasks.execute()
+            val tasks = tasksRepository.getTasks()
             _state.update {
                 it.copy(
                     tasks = tasks,
@@ -47,11 +47,11 @@ class TasksViewModel @Inject constructor(
                     Optional.Present(dueDate.format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'")))
             }
 
-            useCases.createTask.execute(description, due)
+            tasksRepository.createTask(description, due)
 
             _state.update {
                 it.copy(
-                    tasks = useCases.getTasks.execute(),
+                    tasks = tasksRepository.getTasks(),
                     isLoading = false
                 )
             }

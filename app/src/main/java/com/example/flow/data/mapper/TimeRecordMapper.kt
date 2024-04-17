@@ -7,7 +7,7 @@ import com.example.flow.TimeRecordsQuery
 import com.example.flow.TimeStartMutation
 import com.example.flow.TimeStopMutation
 import com.example.flow.UntagTimeRecordMutation
-import com.example.flow.domain.model.TimeRecord
+import com.example.flow.data.model.TimeRecord
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 

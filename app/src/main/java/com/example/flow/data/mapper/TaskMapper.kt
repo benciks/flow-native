@@ -2,7 +2,7 @@ package com.example.flow.data.mapper
 
 import com.example.flow.CreateTaskMutation
 import com.example.flow.TasksQuery
-import com.example.flow.domain.model.Task
+import com.example.flow.data.model.Task
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 

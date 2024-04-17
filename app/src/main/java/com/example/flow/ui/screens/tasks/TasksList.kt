@@ -73,7 +73,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import com.example.flow.domain.model.Task
+import com.example.flow.data.model.Task
 import com.example.flow.ui.screens.time.TimeRecordItem
 import kotlinx.coroutines.launch
 import java.time.Instant

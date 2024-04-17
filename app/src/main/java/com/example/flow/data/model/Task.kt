@@ -1,4 +1,4 @@
-package com.example.flow.domain.model
+package com.example.flow.data.model
 
 import java.time.LocalDateTime
 
