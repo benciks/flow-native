@@ -4,6 +4,7 @@ plugins {
     id("com.apollographql.apollo3") version "3.8.2"
     kotlin("kapt")
     id("com.google.dagger.hilt.android")
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -72,6 +73,10 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:$nav_version")
     implementation("androidx.work:work-runtime-ktx:2.9.0")
 
+    // Compose destinations
+    implementation("io.github.raamcosta.compose-destinations:core:1.10.2")
+    ksp("io.github.raamcosta.compose-destinations:ksp:1.10.2")
+
     // Hilt
     implementation("com.google.dagger:hilt-android:2.51")
     kapt("com.google.dagger:hilt-compiler:2.51")
@@ -80,6 +85,9 @@ dependencies {
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     implementation("com.apollographql.apollo3:apollo-normalized-cache:3.8.2")
+
+    // Datastore
+    implementation("androidx.datastore:datastore-preferences:1.1.0")
 
     implementation("androidx.compose.material:material-icons-extended-android:1.6.3")
     implementation("androidx.core:core-ktx:1.12.0")

@@ -21,11 +21,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -38,32 +35,38 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.example.flow.TimeNavGraph
 import com.example.flow.data.model.TimeRecord
-import com.example.flow.ui.theme.Gray500
-import com.example.flow.ui.theme.Gray600
+import com.example.flow.ui.components.BottomNav
+import com.example.flow.ui.screens.destinations.TimeDetailScreenDestination
+import com.example.flow.ui.screens.destinations.TimeTagsScreenDestination
 import com.example.flow.ui.theme.Primary
+import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.RootNavGraph
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import java.time.LocalDateTime
 
 @OptIn(ExperimentalFoundationApi::class)
+@TimeNavGraph(start = true)
+@Destination
 @Composable
 fun TimeScreen(
-    navController: NavHostController,
-    viewModel: TimeRecordsViewModel = hiltViewModel()
+    navController: NavController,
+    viewModel: TimeRecordsViewModel
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    Scaffold { paddingValues ->
+    Scaffold(
+
+    ) { paddingValues ->
         if (state.isLoading) {
             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                 CircularProgressIndicator()
@@ -131,7 +134,7 @@ fun TimerHeader(
     currentTime: Int = 0,
     secondsToTime: (Int) -> String = { it.toString() },
     startedAt: String? = null,
-    navController: NavHostController,
+    navController: NavController,
     selectCurrentRecord: () -> Unit = {}
 ) {
     Box(
@@ -175,7 +178,7 @@ fun TimerHeader(
                     modifier = Modifier.padding(top = 8.dp),
                     onClick = {
                         selectCurrentRecord()
-                        navController.navigate("time_tags")
+                        navController.navigate(TimeTagsScreenDestination.route)
 
                     }) {
                     Icon(
@@ -202,13 +205,13 @@ fun TimeRecordItem(
     record: TimeRecord,
     toDisplayDateTime: (LocalDateTime?) -> String = { it.toString() },
     displayDifference: (LocalDateTime?, LocalDateTime?) -> String = { _, _ -> "12:33" },
-    navController: NavHostController,
+    navController: NavController,
     onSelectItem: (timeRecord: TimeRecord) -> Unit = {}
 ) {
     OutlinedCard(
         onClick = {
             onSelectItem(record)
-            navController.navigate("time_detail")
+            navController.navigate(TimeDetailScreenDestination.route)
         },
     ) {
         Column(modifier = Modifier.padding(16.dp)) {

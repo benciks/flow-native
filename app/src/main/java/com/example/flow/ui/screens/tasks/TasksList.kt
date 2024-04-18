@@ -72,9 +72,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.example.flow.data.model.Task
+import com.example.flow.ui.components.BottomNav
 import com.example.flow.ui.screens.time.TimeRecordItem
+import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
@@ -84,9 +89,10 @@ import java.time.format.DateTimeFormatter
 import java.util.Calendar
 
 @OptIn(ExperimentalFoundationApi::class)
+@Destination
 @Composable
 fun TasksScreen(
-    navController: NavHostController,
+    navController: NavController,
     viewModel: TasksViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()

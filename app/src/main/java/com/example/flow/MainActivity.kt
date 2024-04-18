@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -14,77 +15,65 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
-import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
-import androidx.navigation.navigation
-import com.example.flow.ui.screens.CalendarScreen
-import com.example.flow.ui.screens.time.TimeScreen
-import com.example.flow.ui.theme.FlowTheme
 import com.example.flow.ui.components.BottomNav
-import com.example.flow.ui.Screen
-import com.example.flow.ui.screens.ProfileScreen
-import com.example.flow.ui.screens.tasks.TasksScreen
-import com.example.flow.ui.screens.time.TimeDetailScreen
+import com.example.flow.ui.theme.FlowTheme
+import com.example.flow.ui.screens.NavGraphs
+import com.example.flow.ui.screens.appCurrentDestinationAsState
+import com.example.flow.ui.screens.destinations.Destination
+import com.example.flow.ui.screens.destinations.RegisterScreenDestination
+import com.example.flow.ui.screens.startAppDestination
 import com.example.flow.ui.screens.time.TimeRecordsViewModel
-import com.example.flow.ui.screens.time.TimeTagsScreen
-import com.example.flow.ui.theme.Gray100
+import com.ramcosta.composedestinations.DestinationsNavHost
+import com.ramcosta.composedestinations.annotation.NavGraph
+import com.ramcosta.composedestinations.annotation.RootNavGraph
+import com.ramcosta.composedestinations.navigation.dependency
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Qualifier
+
+@RootNavGraph
+@NavGraph
+annotation class TimeNavGraph(
+    val start: Boolean = false
+)
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             FlowTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier
-                        .fillMaxSize()
-                ) {
-                    val navController = rememberNavController()
-                    Scaffold(
-                        bottomBar = { BottomNav(navController) },
-                    ) { innerPadding ->
-                        NavHost(
-                            navController,
-                            startDestination = "time",
-                            Modifier.padding(innerPadding)
-                        ) {
-                            navigation(
-                                startDestination = Screen.Time.route,
-                                route = "time"
-                            ) {
-                                composable(Screen.Time.route) {
-                                    val viewModel =
-                                        it.sharedViewModel<TimeRecordsViewModel>(navController)
-                                    TimeScreen(navController, viewModel)
-                                }
-                                composable(Screen.TimeDetail.route) {
-                                    val viewModel =
-                                        it.sharedViewModel<TimeRecordsViewModel>(navController)
-                                    TimeDetailScreen(navController, viewModel)
-                                }
-                                composable(Screen.TimeTags.route) {
-                                    val viewModel =
-                                        it.sharedViewModel<TimeRecordsViewModel>(navController)
-                                    TimeTagsScreen(navController, viewModel)
-                                }
-                            }
+                val navController = rememberNavController()
+                val currentDestination: Destination =
+                    navController.appCurrentDestinationAsState().value
+                        ?: NavGraphs.root.startAppDestination
 
-                            navigation(
-                                startDestination = Screen.Tasks.route,
-                                route = "task"
-                            ) {
-                                composable(Screen.Tasks.route) { TasksScreen(navController) }
-                            }
+                val publicRoutes = listOf(
+                    NavGraphs.root.startAppDestination.route,
+                    RegisterScreenDestination.route
+                )
 
-                            composable(Screen.Calendar.route) { CalendarScreen(navController) }
-                            composable(Screen.Profile.route) { ProfileScreen(navController) }
+                Scaffold(
+                    bottomBar = {
+                        if (!publicRoutes.contains(currentDestination.route)) {
+                            BottomNav(navController = navController)
                         }
                     }
+                ) { padding ->
+                    DestinationsNavHost(
+                        navGraph = NavGraphs.root,
+                        Modifier.padding(padding),
+                        navController = navController,
+                        dependenciesContainerBuilder = {
+                            dependency(NavGraphs.time) {
+                                val parentEntry = remember(navBackStackEntry) {
+                                    navController.getBackStackEntry(NavGraphs.time.route)
+                                }
+                                hiltViewModel<TimeRecordsViewModel>(parentEntry)
+                            }
+                        }
+                    )
                 }
             }
         }

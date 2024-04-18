@@ -23,12 +23,21 @@ type Mutation {
   tagTimeRecord(id: ID!, tag: String!): TimeRecord!
   untagTimeRecord(id: ID!, tag: String!): TimeRecord!
   createTask(description: String!, project: String, priority: String, due: String): Task!
+  signIn(username: String!, password: String!): SignInPayload!
+  signUp(username: String!, password: String!): SignInPayload!
+  signOut: Boolean!
 }
 
 type Query {
   timeRecords: [TimeRecord!]!
   timeTags: [String!]!
+  me: User!
   tasks: [Task!]!
+}
+
+type SignInPayload {
+  token: String!
+  user: User!
 }
 
 type Task {
@@ -45,10 +54,19 @@ type Task {
   tags: [String!]!
 }
 
+scalar Time
+
 type TimeRecord {
   id: ID!
   start: String!
   end: String!
   tags: [String!]!
+}
+
+type User {
+  id: ID!
+  username: String!
+  password: String!
+  createdAt: Time!
 }
 

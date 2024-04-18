@@ -3,6 +3,7 @@ package com.example.flow.ui.screens.time
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.compose.rememberNavController
 import com.apollographql.apollo3.api.Optional
 import com.example.flow.data.model.TimeRecord
 import com.example.flow.data.repository.TimeRecordRepository
@@ -15,6 +16,16 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
+
+data class TimeRecordsState(
+    val timeRecords: List<TimeRecord> = emptyList(),
+    val isLoading: Boolean = false,
+    val isTracking: Boolean = false,
+    val selectedRecord: TimeRecord? = null,
+    val currentTimeSeconds: Int = 0,
+    val startedAt: String? = null,
+    val recentTags: List<String> = emptyList(),
+)
 
 @HiltViewModel
 class TimeRecordsViewModel @Inject constructor(

@@ -3,6 +3,7 @@ package com.example.flow.ui.screens.tasks
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.apollographql.apollo3.api.Optional
+import com.example.flow.data.model.Task
 import com.example.flow.data.repository.TaskRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,6 +13,11 @@ import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
+
+data class TasksState(
+    val tasks: List<Task> = emptyList(),
+    val isLoading: Boolean = false,
+)
 
 @HiltViewModel
 class TasksViewModel @Inject constructor(
