@@ -31,7 +31,7 @@ class NavbarItem(
 )
 
 val items = listOf(
-    NavbarItem(Icons.Filled.Timer, "Time records", TimeScreenDestination),
+    NavbarItem(Icons.Filled.Timer, "Time", TimeScreenDestination),
     NavbarItem(Icons.Filled.Task, "Tasks", TasksScreenDestination),
     NavbarItem(Icons.Filled.CalendarMonth, "Calendar", CalendarScreenDestination),
     NavbarItem(Icons.Filled.AccountCircle, "Profile", ProfileScreenDestination),

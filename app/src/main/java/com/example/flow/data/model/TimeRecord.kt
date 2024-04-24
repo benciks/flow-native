@@ -1,12 +1,13 @@
 package com.example.flow.data.model
 
 import java.time.LocalDateTime
+import java.time.ZonedDateTime
 
 data class TimeRecord(
     val id: String,
     val start: String,
     val end: String,
-    val startDateTime: LocalDateTime?,
-    val endDateTime: LocalDateTime?,
+    val startDateTime: ZonedDateTime?,
+    val endDateTime: ZonedDateTime?,
     val tags: List<String>,
 )

@@ -1,7 +1,6 @@
 package com.example.flow.ui.screens.tasks
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,23 +13,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Event
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
-import androidx.compose.material3.ElevatedButton
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -41,16 +33,11 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TimeInput
 import androidx.compose.material3.TimePicker
-import androidx.compose.material3.TimePickerDefaults
-import androidx.compose.material3.TimePickerLayoutType
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,33 +45,23 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.example.flow.data.model.Task
-import com.example.flow.ui.components.BottomNav
-import com.example.flow.ui.screens.time.TimeRecordItem
 import com.ramcosta.composedestinations.annotation.Destination
-import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.launch
 import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
 
@@ -178,7 +155,7 @@ fun TaskItem(
         urgency = 0.6,
         priority = "H",
         due = "2021-10-10T10:00:00Z",
-        dueDateTime = LocalDateTime.now(),
+        dueDateTime = ZonedDateTime.now(),
         project = "Project",
         tags = emptyList()
     ),
@@ -231,7 +208,7 @@ fun TaskItem(
 @Composable
 fun CreateTaskDescriptionSheet(
     onDismiss: () -> Unit,
-    onCreate: (description: String, due: LocalDateTime?) -> Unit
+    onCreate: (description: String, due: ZonedDateTime?) -> Unit
 ) {
     val modalState = rememberModalBottomSheetState()
     ModalBottomSheet(
@@ -247,7 +224,7 @@ fun CreateTaskDescriptionSheet(
         val dateSheet = remember { mutableStateOf(false) }
         val timeSheet = remember { mutableStateOf(false) }
 
-        val selectedDueDate = remember { mutableStateOf<LocalDateTime?>(null) }
+        val selectedDueDate = remember { mutableStateOf<ZonedDateTime?>(null) }
 
         if (dateSheet.value) {
             CreateTaskDateSheet(onDismiss = {
@@ -348,7 +325,7 @@ fun CreateTaskDescriptionSheet(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateTaskDateSheet(onDismiss: () -> Unit, onCreate: (LocalDateTime) -> Unit = {}) {
+fun CreateTaskDateSheet(onDismiss: () -> Unit, onCreate: (ZonedDateTime) -> Unit = {}) {
     val modalState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -372,9 +349,9 @@ fun CreateTaskDateSheet(onDismiss: () -> Unit, onCreate: (LocalDateTime) -> Unit
             Button(onClick = {
                 scope.launch {
                     onCreate(
-                        LocalDateTime.ofInstant(
+                        ZonedDateTime.ofInstant(
                             Instant.ofEpochMilli(dateState.selectedDateMillis!!),
-                            ZoneOffset.UTC
+                            ZoneId.systemDefault()
                         )
                     )
                 }
@@ -388,7 +365,7 @@ fun CreateTaskDateSheet(onDismiss: () -> Unit, onCreate: (LocalDateTime) -> Unit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateTaskTimeSheet(onDismiss: () -> Unit, onCreate: (LocalDateTime) -> Unit = {}) {
+fun CreateTaskTimeSheet(onDismiss: () -> Unit, onCreate: (ZonedDateTime) -> Unit = {}) {
     val modalState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -424,9 +401,9 @@ fun CreateTaskTimeSheet(onDismiss: () -> Unit, onCreate: (LocalDateTime) -> Unit
                     cal.set(Calendar.MINUTE, timeState.minute)
 
                     onCreate(
-                        LocalDateTime.ofInstant(
+                        ZonedDateTime.ofInstant(
                             cal.toInstant(),
-                            ZoneOffset.UTC
+                            ZoneId.systemDefault()
                         )
                     )
                 }

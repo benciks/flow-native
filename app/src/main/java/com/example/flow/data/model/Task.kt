@@ -1,6 +1,6 @@
 package com.example.flow.data.model
 
-import java.time.LocalDateTime
+import java.time.ZonedDateTime
 
 data class Task(
     val id: String,
@@ -15,5 +15,5 @@ data class Task(
     val project: String,
     val tags: List<String>,
 
-    val dueDateTime: LocalDateTime?
+    val dueDateTime: ZonedDateTime?
 )

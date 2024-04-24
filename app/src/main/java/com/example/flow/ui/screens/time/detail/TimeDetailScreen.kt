@@ -62,6 +62,7 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -93,13 +94,13 @@ fun TimeDetailScreen(
     val snackScope = rememberCoroutineScope()
 
     val startDatePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = state.selectedRecord?.startDateTime?.toInstant(ZoneOffset.UTC)
+        initialSelectedDateMillis = state.selectedRecord?.startDateTime?.toInstant()
             ?.toEpochMilli()!!
     )
 
     val endDatePickerState = if (state.selectedRecord?.endDateTime != null) {
         rememberDatePickerState(
-            initialSelectedDateMillis = state.selectedRecord?.endDateTime?.toInstant(ZoneOffset.UTC)
+            initialSelectedDateMillis = state.selectedRecord?.endDateTime?.toInstant()
                 ?.toEpochMilli()!!
         )
     } else {
@@ -163,8 +164,9 @@ fun TimeDetailScreen(
                         // Set time to start time
                         val time = state.selectedRecord?.startDateTime?.toLocalTime()
                         val newDateTime = newDate.withHour(time?.hour!!).withMinute(time.minute)
+                        val newDateTimeZoned = ZonedDateTime.of(newDateTime, ZoneOffset.UTC)
 
-                        viewModel.modifySelectedRecordDate(newDateTime, null)
+                        viewModel.modifySelectedRecordDate(newDateTimeZoned, null)
                     } else {
                         val newDate = LocalDateTime.ofInstant(
                             Instant.ofEpochMilli(endDatePickerState.selectedDateMillis!!),
@@ -173,8 +175,9 @@ fun TimeDetailScreen(
                         // Set time to end time
                         val time = state.selectedRecord?.endDateTime?.toLocalTime()
                         val newDateTime = newDate.withHour(time?.hour!!).withMinute(time.minute)
+                        val newDateTimeZoned = ZonedDateTime.of(newDateTime, ZoneOffset.UTC)
 
-                        viewModel.modifySelectedRecordDate(null, newDateTime)
+                        viewModel.modifySelectedRecordDate(null, newDateTimeZoned)
                     }
 
                     showDatePicker = false

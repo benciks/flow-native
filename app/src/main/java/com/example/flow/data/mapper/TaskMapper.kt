@@ -3,7 +3,8 @@ package com.example.flow.data.mapper
 import com.example.flow.CreateTaskMutation
 import com.example.flow.TasksQuery
 import com.example.flow.data.model.Task
-import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 fun TasksQuery.Task.toTask(): Task {
@@ -40,7 +41,10 @@ fun CreateTaskMutation.CreateTask.toTask(): Task {
     )
 }
 
-private fun parseToLocalDateTime(timestamp: String): LocalDateTime? {
+private fun parseToLocalDateTime(timestamp: String): ZonedDateTime? {
     if (timestamp.isEmpty()) return null
-    return LocalDateTime.parse(timestamp, DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'"))
+    return ZonedDateTime.parse(timestamp, DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmssX"))
+        .withZoneSameInstant(
+            ZoneId.systemDefault()
+        )
 }

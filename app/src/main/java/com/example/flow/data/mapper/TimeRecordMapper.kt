@@ -9,6 +9,8 @@ import com.example.flow.TimeStopMutation
 import com.example.flow.UntagTimeRecordMutation
 import com.example.flow.data.model.TimeRecord
 import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 fun TimeRecordsQuery.TimeRecord.toTimeRecord(): TimeRecord {
@@ -88,7 +90,10 @@ fun UntagTimeRecordMutation.UntagTimeRecord.toTimeRecord(): TimeRecord {
     )
 }
 
-private fun parseToLocalDateTime(timestamp: String): LocalDateTime? {
+private fun parseToLocalDateTime(timestamp: String): ZonedDateTime? {
     if (timestamp.isEmpty()) return null
-    return LocalDateTime.parse(timestamp, DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'"))
+    return ZonedDateTime.parse(timestamp, DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmssX"))
+        .withZoneSameInstant(
+            ZoneId.systemDefault()
+        )
 }

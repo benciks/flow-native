@@ -1,5 +1,6 @@
 package com.example.flow.ui.screens.tasks
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.apollographql.apollo3.api.Optional
@@ -11,6 +12,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
@@ -44,13 +47,20 @@ class TasksViewModel @Inject constructor(
         }
     }
 
-    fun createTask(description: String, dueDate: LocalDateTime? = null) {
+    fun createTask(description: String, dueDate: ZonedDateTime? = null) {
         viewModelScope.launch {
             var due: Optional<String> = Optional.Absent
 
             if (dueDate != null) {
+                // Since the due date is in ZonedDateTime, convert it to UTC time
                 due =
-                    Optional.Present(dueDate.format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'")))
+                    Optional.Present(
+                        dueDate.format(
+                            DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'").withZone(
+                                ZoneId.of("UTC")
+                            )
+                        )
+                    )
             }
 
             tasksRepository.createTask(description, due)

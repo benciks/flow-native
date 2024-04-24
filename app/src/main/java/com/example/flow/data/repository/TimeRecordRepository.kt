@@ -12,6 +12,7 @@ import com.example.flow.UntagTimeRecordMutation
 import com.example.flow.data.mapper.toTimeRecord
 import com.example.flow.data.model.TimeRecord
 import java.time.LocalDateTime
+import java.time.ZonedDateTime
 import javax.inject.Inject
 
 class TimeRecordRepository @Inject constructor(
@@ -32,7 +33,7 @@ class TimeRecordRepository @Inject constructor(
             "",
             "",
             "",
-            LocalDateTime.now(),
+            ZonedDateTime.now(),
             null,
             emptyList()
         )
@@ -46,7 +47,7 @@ class TimeRecordRepository @Inject constructor(
             "",
             "",
             "",
-            LocalDateTime.now(),
+            ZonedDateTime.now(),
             null,
             emptyList()
         )
@@ -64,7 +65,7 @@ class TimeRecordRepository @Inject constructor(
             "",
             "",
             "",
-            LocalDateTime.now(),
+            ZonedDateTime.now(),
             null,
             emptyList()
         )
@@ -78,7 +79,7 @@ class TimeRecordRepository @Inject constructor(
             "",
             "",
             "",
-            LocalDateTime.now(),
+            ZonedDateTime.now(),
             null,
             emptyList()
         )
@@ -92,7 +93,7 @@ class TimeRecordRepository @Inject constructor(
             "",
             "",
             "",
-            LocalDateTime.now(),
+            ZonedDateTime.now(),
             null,
             emptyList()
         )
@@ -106,7 +107,7 @@ class TimeRecordRepository @Inject constructor(
             "",
             "",
             "",
-            LocalDateTime.now(),
+            ZonedDateTime.now(),
             null,
             emptyList()
         )

@@ -46,7 +46,7 @@ object ApolloModule {
             .build()
 
         return ApolloClient.Builder()
-            .serverUrl("http://localhost:8080/query")
+            .serverUrl("http://10.0.2.2:3000/query")
             .normalizedCache(cacheFactory)
             .fetchPolicy(FetchPolicy.NetworkFirst)
             .okHttpClient(okHttpClient)

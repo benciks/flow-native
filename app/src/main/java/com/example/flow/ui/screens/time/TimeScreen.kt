@@ -52,6 +52,7 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import java.time.LocalDateTime
+import java.time.ZonedDateTime
 
 @OptIn(ExperimentalFoundationApi::class)
 @TimeNavGraph(start = true)
@@ -109,7 +110,7 @@ fun TimeScreen(
                         )
                     }
                 }
-                items(state.timeRecords, key = { it.start }) {
+                items(state.timeRecords, key = { it.end }) {
                     Box(modifier = Modifier.animateItemPlacement()) {
                         TimeRecordItem(
                             it,
@@ -203,8 +204,8 @@ fun TimerHeader(
 @Composable
 fun TimeRecordItem(
     record: TimeRecord,
-    toDisplayDateTime: (LocalDateTime?) -> String = { it.toString() },
-    displayDifference: (LocalDateTime?, LocalDateTime?) -> String = { _, _ -> "12:33" },
+    toDisplayDateTime: (ZonedDateTime?) -> String = { it.toString() },
+    displayDifference: (ZonedDateTime?, ZonedDateTime?) -> String = { _, _ -> "12:33" },
     navController: NavController,
     onSelectItem: (timeRecord: TimeRecord) -> Unit = {}
 ) {

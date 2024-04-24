@@ -13,9 +13,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
+import kotlin.math.log
 
 data class TimeRecordsState(
     val timeRecords: List<TimeRecord> = emptyList(),
@@ -57,7 +60,7 @@ class TimeRecordsViewModel @Inject constructor(
         }
     }
 
-    fun toDisplayDateTime(date: LocalDateTime?): String {
+    fun toDisplayDateTime(date: ZonedDateTime?): String {
         if (date == null) {
             return "-"
         }
@@ -67,14 +70,15 @@ class TimeRecordsViewModel @Inject constructor(
             "toDisplayDateTime: ${date.toLocalDate()} ${LocalDateTime.now().toLocalDate()}"
         )
 
+        val now = ZonedDateTime.now()
 
         // If today, display time only
-        if (date.toLocalDate() == LocalDateTime.now().toLocalDate()) {
+        if (date.toLocalDate() == now.toLocalDate()) {
             return date.format(DateTimeFormatter.ofPattern("HH:mm"))
         }
 
         // If yesterday, display "Yesterday"
-        if (date.toLocalDate() == LocalDateTime.now().toLocalDate().minusDays(1)) {
+        if (date.toLocalDate() == now.toLocalDate().minusDays(1)) {
             return "Yesterday " + date.format(DateTimeFormatter.ofPattern(" HH:mm"))
         }
 
@@ -99,18 +103,19 @@ class TimeRecordsViewModel @Inject constructor(
     }
 
     private fun calculateSecondsElapsed(
-        start: LocalDateTime?,
-        end: LocalDateTime? = LocalDateTime.now()
+        start: ZonedDateTime?,
+        end: ZonedDateTime? = ZonedDateTime.now().withZoneSameInstant(ZoneId.systemDefault())
     ): Int {
         if (start == null || end == null) {
             return 0
         }
-        val startEpochSeconds = start.toEpochSecond(ZoneOffset.UTC)
-        val nowEpochSeconds = end.toEpochSecond(ZoneOffset.UTC)
+
+        val nowEpochSeconds = end.toEpochSecond()
+        val startEpochSeconds = start.toEpochSecond()
         return (nowEpochSeconds - startEpochSeconds).toInt()
     }
 
-    fun displayDifference(start: LocalDateTime?, end: LocalDateTime?): String {
+    fun displayDifference(start: ZonedDateTime?, end: ZonedDateTime?): String {
         if (start == null || end == null) {
             return ""
         }
@@ -127,7 +132,7 @@ class TimeRecordsViewModel @Inject constructor(
                 it.copy(
                     isTracking = true,
                     timeRecords = timeRecordsRepository.getTimeRecords(),
-                    startedAt = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
+                    startedAt = ZonedDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
                 )
             }
 
@@ -225,7 +230,7 @@ class TimeRecordsViewModel @Inject constructor(
         }
     }
 
-    fun modifySelectedRecordDate(start: LocalDateTime?, end: LocalDateTime?) {
+    fun modifySelectedRecordDate(start: ZonedDateTime?, end: ZonedDateTime?) {
         viewModelScope.launch {
             var startTimestamp: Optional<String?> = Optional.Absent
             var endTimestamp: Optional<String?> = Optional.Absent
