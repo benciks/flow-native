@@ -15,6 +15,8 @@ custom scalar types.
 """
 directive @specifiedBy(url: String!) on SCALAR
 
+scalar File
+
 type Mutation {
   timeStart: TimeRecord!
   timeStop: TimeRecord!
@@ -23,9 +25,12 @@ type Mutation {
   tagTimeRecord(id: ID!, tag: String!): TimeRecord!
   untagTimeRecord(id: ID!, tag: String!): TimeRecord!
   createTask(description: String!, project: String, priority: String, due: String): Task!
+  markTaskDone(id: ID!): Task!
   signIn(username: String!, password: String!): SignInPayload!
   signUp(username: String!, password: String!): SignInPayload!
   signOut: Boolean!
+  downloadTaskKeys: String!
+  uploadTimeWarriorKey(key: String!): Boolean!
 }
 
 type Query {

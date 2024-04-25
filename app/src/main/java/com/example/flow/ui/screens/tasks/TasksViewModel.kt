@@ -20,6 +20,8 @@ import javax.inject.Inject
 data class TasksState(
     val tasks: List<Task> = emptyList(),
     val isLoading: Boolean = false,
+    val recentProjects: List<String> = emptyList(),
+    val view: String = "all"
 )
 
 @HiltViewModel
@@ -33,23 +35,62 @@ class TasksViewModel @Inject constructor(
         initializeViewModel()
     }
 
+    private suspend fun filterTasksByView(view: String) {
+        _state.update {
+            when (view) {
+                "all" -> {
+                    it.copy(tasks = tasksRepository.getTasks())
+                }
+
+                "ongoing" -> {
+                    it.copy(
+                        tasks = tasksRepository.getTasks()
+                            .filter { task -> task.status == "pending" })
+                }
+
+                else -> {
+                    it.copy(
+                        tasks = tasksRepository.getTasks()
+                            .filter { task -> task.status == "completed" })
+                }
+            }
+        }
+    }
+
+    suspend fun updateView(view: String) {
+        _state.update {
+            it.copy(view = view)
+        }
+        filterTasksByView(view)
+    }
+
     private fun initializeViewModel() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
 
             val tasks = tasksRepository.getTasks()
+            val recentProjects = tasks.map { it.project }.distinct()
+
             _state.update {
                 it.copy(
                     tasks = tasks,
-                    isLoading = false
+                    isLoading = false,
+                    recentProjects = recentProjects
                 )
             }
         }
     }
 
-    fun createTask(description: String, dueDate: ZonedDateTime? = null) {
+    fun createTask(
+        description: String,
+        dueDate: ZonedDateTime? = null,
+        project: String? = null,
+        priority: String? = null
+    ) {
         viewModelScope.launch {
             var due: Optional<String> = Optional.Absent
+            var projectOptional: Optional<String> = Optional.Absent
+            var priorityOptional: Optional<String> = Optional.Absent
 
             if (dueDate != null) {
                 // Since the due date is in ZonedDateTime, convert it to UTC time
@@ -63,7 +104,15 @@ class TasksViewModel @Inject constructor(
                     )
             }
 
-            tasksRepository.createTask(description, due)
+            if (project != null) {
+                projectOptional = Optional.Present(project)
+            }
+
+            if (priority != null) {
+                priorityOptional = Optional.Present(priority)
+            }
+
+            tasksRepository.createTask(description, due, projectOptional, priorityOptional)
 
             _state.update {
                 it.copy(
@@ -71,6 +120,22 @@ class TasksViewModel @Inject constructor(
                     isLoading = false
                 )
             }
+        }
+    }
+
+    fun markTaskDone(taskId: String) {
+        if (taskId == "0") return
+        viewModelScope.launch {
+            tasksRepository.markDone(taskId)
+
+            _state.update {
+                it.copy(
+                    isLoading = false,
+                    view = it.view,
+                )
+            }
+
+            filterTasksByView(state.value.view)
         }
     }
 }

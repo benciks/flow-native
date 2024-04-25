@@ -1,0 +1,15 @@
+mutation markTaskDone($taskId: ID!) {
+    markTaskDone(id: $taskId) {
+        id
+        description
+        entry
+        modified
+        uuid
+        urgency
+        status
+        due
+        priority
+        project
+        tags
+    }
+}

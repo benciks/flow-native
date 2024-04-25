@@ -1,6 +1,7 @@
 package com.example.flow.data.mapper
 
 import com.example.flow.CreateTaskMutation
+import com.example.flow.MarkTaskDoneMutation
 import com.example.flow.TasksQuery
 import com.example.flow.data.model.Task
 import java.time.ZoneId
@@ -25,6 +26,23 @@ fun TasksQuery.Task.toTask(): Task {
 }
 
 fun CreateTaskMutation.CreateTask.toTask(): Task {
+    return Task(
+        id = id,
+        uuid = uuid,
+        description = description,
+        entry = entry,
+        modified = modified,
+        status = status,
+        urgency = urgency,
+        due = due,
+        priority = priority,
+        project = project,
+        dueDateTime = parseToLocalDateTime(due),
+        tags = tags
+    )
+}
+
+fun MarkTaskDoneMutation.MarkTaskDone.toTask(): Task {
     return Task(
         id = id,
         uuid = uuid,

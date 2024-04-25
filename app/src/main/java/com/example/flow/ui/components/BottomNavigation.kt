@@ -1,5 +1,16 @@
 package com.example.flow.ui.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -11,8 +22,13 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.example.flow.ui.screens.NavGraphs
@@ -33,7 +49,6 @@ class NavbarItem(
 val items = listOf(
     NavbarItem(Icons.Filled.Timer, "Time", TimeScreenDestination),
     NavbarItem(Icons.Filled.Task, "Tasks", TasksScreenDestination),
-    NavbarItem(Icons.Filled.CalendarMonth, "Calendar", CalendarScreenDestination),
     NavbarItem(Icons.Filled.AccountCircle, "Profile", ProfileScreenDestination),
 )
 
@@ -48,20 +63,52 @@ fun BottomNav(navController: NavController) {
             ?: NavGraphs.root.startAppDestination
 
         items.forEach { item ->
-            NavigationBarItem(
-                icon = { Icon(item.icon, contentDescription = null) },
-                label = { Text(item.label) },
-                selected = currentDestination == item.route,
-                onClick = {
-                    navController.navigate(item.route.route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .weight(1f)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .background(
+                            if (currentDestination == item.route) {
+                                MaterialTheme.colorScheme.tertiaryContainer
+                            } else {
+                                MaterialTheme.colorScheme.surface
+                            }
+                        )
+                        .clickable(onClick = {
+                            navController.navigate(item.route.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        })
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        item.icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(22.dp),
+                        tint = if (currentDestination != item.route) {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
                         }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
+                    )
+                    Text(
+                        item.label,
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
-            )
+            }
         }
     }
 }
