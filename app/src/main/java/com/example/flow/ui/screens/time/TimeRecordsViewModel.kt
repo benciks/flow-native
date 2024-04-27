@@ -42,21 +42,30 @@ class TimeRecordsViewModel @Inject constructor(
         initializeViewModel()
     }
 
-    private fun initializeViewModel() {
+    fun fetchTimeRecords() {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
-
             val timeRecords = timeRecordsRepository.getTimeRecords()
             val recentTags = timeRecords.flatMap { it.tags }.distinct()
             _state.update {
                 it.copy(
                     timeRecords = timeRecords,
-                    isLoading = false,
                     recentTags = recentTags
                 )
             }
 
             restartTimerIfRunning(timeRecords)
+        }
+    }
+
+    private fun initializeViewModel() {
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+
+            fetchTimeRecords()
+
+            _state.update {
+                it.copy(isLoading = false)
+            }
         }
     }
 

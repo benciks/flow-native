@@ -1,7 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("com.apollographql.apollo3") version "3.8.2"
+    id("com.apollographql.apollo3") version "3.8.3"
     kotlin("kapt")
     id("com.google.dagger.hilt.android")
     id("com.google.devtools.ksp")
@@ -56,7 +56,7 @@ android {
 
 dependencies {
     // Graphql
-    implementation("com.apollographql.apollo3:apollo-runtime:3.8.2")
+    implementation("com.apollographql.apollo3:apollo-runtime:3.8.3")
 
     // Swipe
     implementation("me.saket.swipe:swipe:1.3.0")
@@ -78,22 +78,22 @@ dependencies {
     ksp("io.github.raamcosta.compose-destinations:ksp:1.10.2")
 
     // Hilt
-    implementation("com.google.dagger:hilt-android:2.51")
-    kapt("com.google.dagger:hilt-compiler:2.51")
+    implementation("com.google.dagger:hilt-android:2.51.1")
+    kapt("com.google.dagger:hilt-compiler:2.51.1")
     implementation("androidx.hilt:hilt-work:1.2.0")
     kapt("androidx.hilt:hilt-compiler:1.2.0")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
-    implementation("com.apollographql.apollo3:apollo-normalized-cache:3.8.2")
+    implementation("com.apollographql.apollo3:apollo-normalized-cache:3.8.3")
 
     // Datastore
     implementation("androidx.datastore:datastore-preferences:1.1.0")
 
-    implementation("androidx.compose.material:material-icons-extended-android:1.6.3")
-    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.compose.material:material-icons-extended-android:1.6.6")
+    implementation("androidx.core:core-ktx:1.13.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
-    implementation("androidx.activity:activity-compose:1.8.2")
-    implementation(platform("androidx.compose:compose-bom:2024.02.02"))
+    implementation("androidx.activity:activity-compose:1.9.0")
+    implementation(platform("androidx.compose:compose-bom:2024.04.01"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
@@ -101,7 +101,7 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2024.02.02"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:2024.04.01"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")

@@ -51,6 +51,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.example.flow.TimeNavGraph
+import com.example.flow.ui.components.BottomNav
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import com.example.flow.ui.components.TimePickerDialog
@@ -230,6 +231,9 @@ fun TimeDetailScreen(
     }
 
     Scaffold(
+        bottomBar = {
+            BottomNav(navController = navController)
+        },
         topBar = {
             TopAppBar(
                 title = { Text(text = "Edit Entry") },

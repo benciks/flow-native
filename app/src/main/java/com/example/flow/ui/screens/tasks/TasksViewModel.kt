@@ -64,20 +64,25 @@ class TasksViewModel @Inject constructor(
         filterTasksByView(view)
     }
 
-    private fun initializeViewModel() {
+    fun fetchTasks() {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
-
             val tasks = tasksRepository.getTasks()
             val recentProjects = tasks.map { it.project }.distinct()
 
             _state.update {
                 it.copy(
                     tasks = tasks,
-                    isLoading = false,
                     recentProjects = recentProjects
                 )
             }
+        }
+    }
+
+    private fun initializeViewModel() {
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+            fetchTasks()
+            _state.update { it.copy(isLoading = false) }
         }
     }
 

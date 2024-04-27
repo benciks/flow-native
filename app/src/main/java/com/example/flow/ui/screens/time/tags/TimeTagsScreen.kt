@@ -42,6 +42,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.flow.TimeNavGraph
+import com.example.flow.ui.components.BottomNav
 import com.example.flow.ui.screens.time.TimeRecordsViewModel
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
@@ -58,6 +59,9 @@ fun TimeTagsScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     Scaffold(
+        bottomBar = {
+            BottomNav(navController = navController)
+        },
         topBar = {
             TopAppBar(
                 title = { Text(text = "Edit tags") },

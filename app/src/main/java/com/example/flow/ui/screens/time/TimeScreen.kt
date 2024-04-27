@@ -23,18 +23,23 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -51,10 +56,11 @@ import com.example.flow.ui.theme.Primary
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import kotlinx.coroutines.delay
 import java.time.LocalDateTime
 import java.time.ZonedDateTime
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @TimeNavGraph(start = true)
 @Destination
 @Composable
@@ -65,63 +71,82 @@ fun TimeScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    Scaffold(
+    val refreshState = rememberPullToRefreshState()
+    if (refreshState.isRefreshing) {
+        LaunchedEffect(true) {
+            // fetch something
+            viewModel.fetchTimeRecords()
+            refreshState.endRefresh()
+        }
+    }
 
+    Scaffold(
+        modifier = Modifier.nestedScroll(refreshState.nestedScrollConnection),
+        bottomBar = {
+            BottomNav(navController)
+        }
     ) { paddingValues ->
         if (state.isLoading) {
             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                 CircularProgressIndicator()
             }
         } else {
-            LazyColumn(
-                contentPadding = PaddingValues(
-                    top = paddingValues.calculateTopPadding() + 16.dp,
-                    bottom = paddingValues.calculateBottomPadding() + 8.dp,
-                    start = 16.dp,
-                    end = 16.dp
-                )
-            ) {
-                item {
-                    TimerHeader(
-                        isTracking = state.isTracking,
-                        startTimer = viewModel::startTimer,
-                        stopTimer = viewModel::stopTimer,
-                        currentTime = state.currentTimeSeconds,
-                        secondsToTime = viewModel::secondsToTime,
-                        startedAt = state.startedAt,
-                        navController = navController,
-                        selectCurrentRecord = viewModel::selectCurrentRecord
+            Box(Modifier.padding(paddingValues)) {
+                LazyColumn(
+                    contentPadding = PaddingValues(
+                        top = paddingValues.calculateTopPadding() + 16.dp,
+                        bottom = paddingValues.calculateBottomPadding() + 8.dp,
+                        start = 16.dp,
+                        end = 16.dp
                     )
-                }
-                item {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 24.dp, bottom = 12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                ) {
+                    item {
+                        TimerHeader(
+                            isTracking = state.isTracking,
+                            startTimer = viewModel::startTimer,
+                            stopTimer = viewModel::stopTimer,
+                            currentTime = state.currentTimeSeconds,
+                            secondsToTime = viewModel::secondsToTime,
+                            startedAt = state.startedAt,
+                            navController = navController,
+                            selectCurrentRecord = viewModel::selectCurrentRecord
+                        )
+                    }
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 24.dp, bottom = 12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
 
-                        Text(
-                            text = "Time Records",
-                            fontSize = MaterialTheme.typography.headlineMedium.fontSize,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
+                            Text(
+                                text = "Time Records",
+                                fontSize = MaterialTheme.typography.headlineMedium.fontSize,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
+                        }
+                    }
+                    items(state.timeRecords, key = { it.end }) {
+                        Box(modifier = Modifier.animateItemPlacement()) {
+                            TimeRecordItem(
+                                it,
+                                viewModel::toDisplayDateTime,
+                                viewModel::displayDifference,
+                                navController,
+                                viewModel::onSelectRecord
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
-                items(state.timeRecords, key = { it.end }) {
-                    Box(modifier = Modifier.animateItemPlacement()) {
-                        TimeRecordItem(
-                            it,
-                            viewModel::toDisplayDateTime,
-                            viewModel::displayDifference,
-                            navController,
-                            viewModel::onSelectRecord
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
+
+                PullToRefreshContainer(
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    state = refreshState,
+                )
             }
         }
     }
