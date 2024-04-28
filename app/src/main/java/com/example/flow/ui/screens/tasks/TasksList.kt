@@ -47,20 +47,23 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.example.flow.TaskNavGraph
 import com.example.flow.ui.components.BottomNav
 import com.example.flow.ui.components.tasks.CreateTaskSheet
 import com.example.flow.ui.components.tasks.TaskItem
+import com.example.flow.ui.screens.destinations.TaskDetailDestination
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
 import java.time.LocalTime
 import java.time.ZonedDateTime
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@TaskNavGraph(start = true)
 @Destination
 @Composable
 fun TasksScreen(
     navController: NavController,
-    viewModel: TasksViewModel = hiltViewModel()
+    viewModel: TasksViewModel
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -203,7 +206,8 @@ fun TasksScreen(
                                 it,
                                 onCheck = { viewModel.markTaskDone(it.id) },
                                 onClick = {
-                                    showSheet = true
+                                    viewModel.selectTask(it)
+                                    navController.navigate(TaskDetailDestination.route)
                                 }
                             )
                         }
@@ -227,7 +231,8 @@ fun TasksScreen(
                                 it,
                                 onCheck = { viewModel.markTaskDone(it.id) },
                                 onClick = {
-                                    showSheet = true
+                                    viewModel.selectTask(it)
+                                    navController.navigate(TaskDetailDestination.route)
                                 }
                             )
                         }
@@ -251,7 +256,8 @@ fun TasksScreen(
                                 it,
                                 onCheck = { viewModel.markTaskDone(it.id) },
                                 onClick = {
-                                    showSheet = true
+                                    viewModel.selectTask(it)
+                                    navController.navigate(TaskDetailDestination.route)
                                 }
                             )
                         }

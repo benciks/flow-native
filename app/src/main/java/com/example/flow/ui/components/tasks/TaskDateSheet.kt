@@ -23,7 +23,11 @@ import java.time.ZonedDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TaskDateSheet(onDismiss: () -> Unit, onCreate: (ZonedDateTime) -> Unit = {}) {
+fun TaskDateSheet(
+    onDismiss: () -> Unit,
+    onCreate: (ZonedDateTime) -> Unit = {},
+    selectedDate: ZonedDateTime? = null
+) {
     val modalState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -31,7 +35,9 @@ fun TaskDateSheet(onDismiss: () -> Unit, onCreate: (ZonedDateTime) -> Unit = {})
         dragHandle = { BottomSheetDefaults.DragHandle() },
     )
     {
-        val dateState = rememberDatePickerState()
+        val initialDate = selectedDate?.toInstant()?.toEpochMilli() ?: System.currentTimeMillis()
+
+        val dateState = rememberDatePickerState(initialSelectedDateMillis = initialDate)
         val scope = rememberCoroutineScope()
 
         DatePicker(

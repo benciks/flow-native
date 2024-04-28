@@ -31,6 +31,7 @@ import com.example.flow.ui.screens.appCurrentDestinationAsState
 import com.example.flow.ui.screens.destinations.Destination
 import com.example.flow.ui.screens.destinations.RegisterScreenDestination
 import com.example.flow.ui.screens.startAppDestination
+import com.example.flow.ui.screens.tasks.TasksViewModel
 import com.example.flow.ui.screens.time.TimeRecordsViewModel
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.annotation.NavGraph
@@ -43,6 +44,12 @@ import javax.inject.Qualifier
 @RootNavGraph
 @NavGraph
 annotation class TimeNavGraph(
+    val start: Boolean = false
+)
+
+@RootNavGraph
+@NavGraph
+annotation class TaskNavGraph(
     val start: Boolean = false
 )
 
@@ -63,6 +70,12 @@ class MainActivity : ComponentActivity() {
                                 navController.getBackStackEntry(NavGraphs.time.route)
                             }
                             hiltViewModel<TimeRecordsViewModel>(parentEntry)
+                        }
+                        dependency(NavGraphs.task) {
+                            val parentEntry = remember(navBackStackEntry) {
+                                navController.getBackStackEntry(NavGraphs.task.route)
+                            }
+                            hiltViewModel<TasksViewModel>(parentEntry)
                         }
                     }
                 )

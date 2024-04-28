@@ -1,6 +1,5 @@
 package com.example.flow.ui.screens.tasks
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.apollographql.apollo3.api.Optional
@@ -11,7 +10,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -21,7 +19,9 @@ data class TasksState(
     val tasks: List<Task> = emptyList(),
     val isLoading: Boolean = false,
     val recentProjects: List<String> = emptyList(),
-    val view: String = "all"
+    val recentTags: List<String> = emptyList(),
+    val view: String = "all",
+    val selectedTask: Task? = null
 )
 
 @HiltViewModel
@@ -67,12 +67,14 @@ class TasksViewModel @Inject constructor(
     fun fetchTasks() {
         viewModelScope.launch {
             val tasks = tasksRepository.getTasks()
-            val recentProjects = tasks.map { it.project }.distinct()
+            val recentProjects = tasks.map { it.project }.filter { it != "" }.distinct()
+            val recentTags = tasks.flatMap { it.tags }.distinct()
 
             _state.update {
                 it.copy(
                     tasks = tasks,
-                    recentProjects = recentProjects
+                    recentProjects = recentProjects,
+                    recentTags = recentTags
                 )
             }
         }
@@ -140,6 +142,83 @@ class TasksViewModel @Inject constructor(
                 )
             }
 
+            filterTasksByView(state.value.view)
+        }
+    }
+
+    fun selectTask(task: Task) {
+        _state.update {
+            it.copy(selectedTask = task)
+        }
+    }
+
+    fun clearSelectedTask() {
+        _state.update {
+            it.copy(selectedTask = null)
+        }
+    }
+
+    fun editTask(
+        taskId: String,
+        description: String? = null,
+        dueDate: ZonedDateTime? = null,
+        project: String? = null,
+        priority: String? = null,
+        tags: List<String> = emptyList()
+    ) {
+        viewModelScope.launch {
+            var desc: Optional<String> = Optional.Absent
+            var due: Optional<String> = Optional.Absent
+            var projectOptional: Optional<String> = Optional.Absent
+            var priorityOptional: Optional<String> = Optional.Absent
+            var tagsOptional: Optional<List<String>> = Optional.Absent
+
+            if (description != null) {
+                desc = Optional.Present(description)
+            }
+
+            if (dueDate != null) {
+                // Since the due date is in ZonedDateTime, convert it to UTC time
+                due =
+                    Optional.Present(
+                        dueDate.format(
+                            DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'").withZone(
+                                ZoneId.of("UTC")
+                            )
+                        )
+                    )
+            }
+
+            if (project != null) {
+                projectOptional = Optional.Present(project)
+            }
+
+            if (priority != null) {
+                priorityOptional = Optional.Present(priority)
+            }
+
+            tasksRepository.editTask(
+                taskId,
+                desc,
+                due,
+                projectOptional,
+                priorityOptional,
+                Optional.Present(tags)
+            )
+            filterTasksByView(state.value.view)
+
+            _state.update {
+                it.copy(
+                    selectedTask = tasksRepository.getTasks().find { task -> task.id == taskId },
+                    isLoading = false
+                )
+            }
+        }
+    }
+
+    fun deleteTask(taskId: String) {
+        viewModelScope.launch {
+            tasksRepository.deleteTask(taskId)
             filterTasksByView(state.value.view)
         }
     }

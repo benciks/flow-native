@@ -1,0 +1,15 @@
+mutation editTask($id: ID!, $description: String, $priority: String, $due: String, $project: String, $tags: [String]) {
+    editTask(id: $id, description: $description, priority: $priority, due: $due, project: $project, tags: $tags) {
+        id
+        description
+        entry
+        modified
+        uuid
+        urgency
+        status
+        due
+        priority
+        project
+        tags
+    }
+}

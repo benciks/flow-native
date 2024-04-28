@@ -25,7 +25,11 @@ import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TaskTimeSheet(onDismiss: () -> Unit, onCreate: (ZonedDateTime) -> Unit = {}) {
+fun TaskTimeSheet(
+    onDismiss: () -> Unit,
+    onCreate: (ZonedDateTime) -> Unit = {},
+    selectedTime: ZonedDateTime? = null
+) {
     val modalState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -33,7 +37,10 @@ fun TaskTimeSheet(onDismiss: () -> Unit, onCreate: (ZonedDateTime) -> Unit = {})
         dragHandle = { BottomSheetDefaults.DragHandle() },
     )
     {
-        val timeState = rememberTimePickerState()
+        val timeState = rememberTimePickerState(
+            initialHour = selectedTime?.hour ?: 0,
+            initialMinute = selectedTime?.minute ?: 0
+        )
         val scope = rememberCoroutineScope()
 
         Column(

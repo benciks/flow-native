@@ -1,6 +1,8 @@
 package com.example.flow.data.mapper
 
 import com.example.flow.CreateTaskMutation
+import com.example.flow.DeleteTaskMutation
+import com.example.flow.EditTaskMutation
 import com.example.flow.MarkTaskDoneMutation
 import com.example.flow.TasksQuery
 import com.example.flow.data.model.Task
@@ -43,6 +45,40 @@ fun CreateTaskMutation.CreateTask.toTask(): Task {
 }
 
 fun MarkTaskDoneMutation.MarkTaskDone.toTask(): Task {
+    return Task(
+        id = id,
+        uuid = uuid,
+        description = description,
+        entry = entry,
+        modified = modified,
+        status = status,
+        urgency = urgency,
+        due = due,
+        priority = priority,
+        project = project,
+        dueDateTime = parseToLocalDateTime(due),
+        tags = tags
+    )
+}
+
+fun EditTaskMutation.EditTask.toTask(): Task {
+    return Task(
+        id = id,
+        uuid = uuid,
+        description = description,
+        entry = entry,
+        modified = modified,
+        status = status,
+        urgency = urgency,
+        due = due,
+        priority = priority,
+        project = project,
+        dueDateTime = parseToLocalDateTime(due),
+        tags = tags
+    )
+}
+
+fun DeleteTaskMutation.DeleteTask.toTask(): Task {
     return Task(
         id = id,
         uuid = uuid,
