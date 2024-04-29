@@ -4,10 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.apollographql.apollo3.api.Optional
 import com.example.flow.data.model.Task
+import com.example.flow.data.model.TaskFilterModel
 import com.example.flow.data.repository.TaskRepository
+import com.example.flow.type.TaskFilter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.ZoneId
@@ -21,7 +24,9 @@ data class TasksState(
     val recentProjects: List<String> = emptyList(),
     val recentTags: List<String> = emptyList(),
     val view: String = "all",
-    val selectedTask: Task? = null
+    val selectedTask: Task? = null,
+    val appliedFilter: Optional<TaskFilter> = Optional.Absent,
+    val filter: TaskFilterModel = TaskFilterModel(status = "pending")
 )
 
 @HiltViewModel
@@ -35,40 +40,38 @@ class TasksViewModel @Inject constructor(
         initializeViewModel()
     }
 
-    private suspend fun filterTasksByView(view: String) {
-        _state.update {
-            when (view) {
-                "all" -> {
-                    it.copy(tasks = tasksRepository.getTasks())
-                }
+    fun applyFilter(filter: TaskFilterModel = state.value.filter) {
+        val taskFilter = Optional.Present(
+            TaskFilter(
+                status = Optional.Present(filter.status),
+                project = Optional.Present(filter.project),
+                priority = Optional.Present(filter.priority),
+                due = Optional.Present(
+                    filter.due?.format(
+                        DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'")
+                            .withZone(ZoneId.of("UTC"))
+                    )
+                ),
+                tags = Optional.Present(filter.tags),
+                description = Optional.Present(filter.description)
+            )
+        )
 
-                "ongoing" -> {
-                    it.copy(
-                        tasks = tasksRepository.getTasks()
-                            .filter { task -> task.status == "pending" })
-                }
-
-                else -> {
-                    it.copy(
-                        tasks = tasksRepository.getTasks()
-                            .filter { task -> task.status == "completed" })
-                }
+        viewModelScope.launch {
+            _state.update {
+                it.copy(
+                    appliedFilter = taskFilter,
+                    filter = filter
+                )
             }
         }
     }
 
-    suspend fun updateView(view: String) {
-        _state.update {
-            it.copy(view = view)
-        }
-        filterTasksByView(view)
-    }
-
     fun fetchTasks() {
         viewModelScope.launch {
-            val tasks = tasksRepository.getTasks()
-            val recentProjects = tasks.map { it.project }.filter { it != "" }.distinct()
-            val recentTags = tasks.flatMap { it.tags }.distinct()
+            val tasks = tasksRepository.getTasks(state.value.appliedFilter)
+            val recentProjects = tasksRepository.getRecentProjects()
+            val recentTags = tasksRepository.getRecentTags()
 
             _state.update {
                 it.copy(
@@ -83,6 +86,7 @@ class TasksViewModel @Inject constructor(
     private fun initializeViewModel() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
+            applyFilter()
             fetchTasks()
             _state.update { it.copy(isLoading = false) }
         }
@@ -104,7 +108,7 @@ class TasksViewModel @Inject constructor(
                 due =
                     Optional.Present(
                         dueDate.format(
-                            DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'").withZone(
+                            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HHmmss'Z'").withZone(
                                 ZoneId.of("UTC")
                             )
                         )
@@ -120,13 +124,7 @@ class TasksViewModel @Inject constructor(
             }
 
             tasksRepository.createTask(description, due, projectOptional, priorityOptional)
-
-            _state.update {
-                it.copy(
-                    tasks = tasksRepository.getTasks(),
-                    isLoading = false
-                )
-            }
+            fetchTasks()
         }
     }
 
@@ -134,15 +132,7 @@ class TasksViewModel @Inject constructor(
         if (taskId == "0") return
         viewModelScope.launch {
             tasksRepository.markDone(taskId)
-
-            _state.update {
-                it.copy(
-                    isLoading = false,
-                    view = it.view,
-                )
-            }
-
-            filterTasksByView(state.value.view)
+            fetchTasks()
         }
     }
 
@@ -171,7 +161,6 @@ class TasksViewModel @Inject constructor(
             var due: Optional<String> = Optional.Absent
             var projectOptional: Optional<String> = Optional.Absent
             var priorityOptional: Optional<String> = Optional.Absent
-            var tagsOptional: Optional<List<String>> = Optional.Absent
 
             if (description != null) {
                 desc = Optional.Present(description)
@@ -205,21 +194,19 @@ class TasksViewModel @Inject constructor(
                 priorityOptional,
                 Optional.Present(tags)
             )
-            filterTasksByView(state.value.view)
 
-            _state.update {
-                it.copy(
-                    selectedTask = tasksRepository.getTasks().find { task -> task.id == taskId },
-                    isLoading = false
-                )
-            }
+            fetchTasks()
         }
     }
 
     fun deleteTask(taskId: String) {
         viewModelScope.launch {
             tasksRepository.deleteTask(taskId)
-            filterTasksByView(state.value.view)
+            _state.update {
+                it.copy(
+                    tasks = tasksRepository.getTasks(state.value.appliedFilter),
+                )
+            }
         }
     }
 }

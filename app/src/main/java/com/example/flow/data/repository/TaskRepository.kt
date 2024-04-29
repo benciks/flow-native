@@ -6,19 +6,36 @@ import com.example.flow.CreateTaskMutation
 import com.example.flow.DeleteTaskMutation
 import com.example.flow.EditTaskMutation
 import com.example.flow.MarkTaskDoneMutation
+import com.example.flow.RecentTaskProjectsQuery
+import com.example.flow.RecentTaskTagsQuery
 import com.example.flow.TasksQuery
 import com.example.flow.data.model.Task
 import com.example.flow.data.mapper.toTask
+import com.example.flow.type.TaskFilter
 import javax.inject.Inject
 
 class TaskRepository @Inject constructor(
     private val apolloClient: ApolloClient
 ) {
-    suspend fun getTasks(): List<Task> {
+    suspend fun getTasks(filter: Optional<TaskFilter?>): List<Task> {
         return apolloClient
-            .query(TasksQuery())
+            .query(TasksQuery(filter))
             .execute()
             .data?.tasks?.map { it.toTask() } ?: emptyList()
+    }
+
+    suspend fun getRecentTags(): List<String> {
+        return apolloClient
+            .query(RecentTaskTagsQuery())
+            .execute()
+            .data?.recentTaskTags ?: emptyList()
+    }
+
+    suspend fun getRecentProjects(): List<String> {
+        return apolloClient
+            .query(RecentTaskProjectsQuery())
+            .execute()
+            .data?.recentTaskProjects ?: emptyList()
     }
 
     suspend fun createTask(

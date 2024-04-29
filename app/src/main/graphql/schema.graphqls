@@ -39,7 +39,9 @@ type Query {
   timeRecords: [TimeRecord!]!
   timeTags: [String!]!
   me: User!
-  tasks: [Task!]!
+  tasks(filter: TaskFilter): [Task!]!
+  recentTaskProjects: [String!]!
+  recentTaskTags: [String!]!
 }
 
 type SignInPayload {
@@ -59,6 +61,15 @@ type Task {
   due: String!
   project: String!
   tags: [String!]!
+}
+
+input TaskFilter {
+  status: String
+  project: String
+  priority: String
+  due: String
+  tags: [String!]
+  description: String
 }
 
 scalar Time
