@@ -1,5 +1,6 @@
 package com.example.flow.ui.components.tasks
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,6 +15,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.filled.Start
+import androidx.compose.material.icons.filled.StopCircle
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Button
@@ -75,27 +79,40 @@ fun TaskItem(
         due = "2021-10-10T10:00:00Z",
         dueDateTime = ZonedDateTime.now(),
         project = "Project",
-        tags = emptyList()
+        tags = emptyList(),
+        depends = emptyList(),
+        parent = null,
+        recur = null,
+        until = null,
+        untilDateTime = null,
+        start = null
     ),
     onClick: () -> Unit = {},
     onCheck: () -> Unit = {},
-    onStartTracking: (String) -> Unit = {}
+    onStart: () -> Unit = {},
+    disabled: Boolean = false
 ) {
     val checkBoxState = remember { mutableStateOf(task.status == "completed") }
 
     val markAsDone = SwipeAction(
         icon = rememberVectorPainter(image = Icons.Default.Done),
-        background = MaterialTheme.colorScheme.primaryContainer,
+        background = MaterialTheme.colorScheme.tertiaryContainer,
         onSwipe = {
             checkBoxState.value = true
             onCheck()
         }
     )
 
-    val track = SwipeAction(
-        icon = rememberVectorPainter(image = Icons.Default.Timer),
-        background = MaterialTheme.colorScheme.tertiaryContainer,
-        onSwipe = { onStartTracking(task.id) }
+    val makeActive = SwipeAction(
+        icon = if (task.start?.isNotEmpty() == true) {
+            rememberVectorPainter(image = Icons.Default.StopCircle)
+        } else {
+            rememberVectorPainter(image = Icons.Default.PlayCircle)
+        },
+        background = MaterialTheme.colorScheme.secondaryContainer,
+        onSwipe = {
+            onStart()
+        }
     )
 
     OutlinedCard(
@@ -104,7 +121,7 @@ fun TaskItem(
         },
     ) {
         SwipeableActionsBox(
-            endActions = listOf(markAsDone, track),
+            endActions = if (disabled) listOf() else listOf(makeActive, markAsDone),
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(MaterialTheme.shapes.medium)
@@ -116,16 +133,18 @@ fun TaskItem(
                 verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Checkbox(
-                    modifier = Modifier
-                        .size(20.dp)
-                        .padding(top = 4.dp),
-                    checked = checkBoxState.value,
-                    enabled = !checkBoxState.value,
-                    onCheckedChange = {
-                        checkBoxState.value = it
-                        onCheck()
-                    })
+                if (!disabled) {
+                    Checkbox(
+                        modifier = Modifier
+                            .size(20.dp)
+                            .padding(top = 4.dp),
+                        checked = checkBoxState.value,
+                        enabled = !checkBoxState.value,
+                        onCheckedChange = {
+                            checkBoxState.value = it
+                            onCheck()
+                        })
+                }
 
                 Column(
                     modifier = Modifier.weight(1f)

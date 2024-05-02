@@ -1,5 +1,6 @@
 package com.example.flow.ui.screens.time.detail
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,6 +37,7 @@ import androidx.compose.material3.TimePickerState
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,6 +46,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -80,8 +83,13 @@ fun TimeDetailScreen(
     var showDatePicker by remember { mutableStateOf(false) }
     var editingTime by remember { mutableStateOf("start") }
     val startTimePickerState = rememberTimePickerState(
-        initialHour = state.selectedRecord?.startDateTime?.hour!!,
-        initialMinute = state.selectedRecord?.startDateTime?.minute!!
+        initialHour = state.selectedRecord?.startDateTime?.hour ?: 0,
+        initialMinute = state.selectedRecord?.startDateTime?.minute ?: 0
+    )
+
+    Log.i(
+        "TimeDetailScreen",
+        "state.selectedRecord?.startDateTime: ${state.selectedRecord?.startDateTime}"
     )
     val endTimePickerState: TimePickerState = if (state.selectedRecord?.endDateTime != null) {
         rememberTimePickerState(
@@ -128,11 +136,25 @@ fun TimeDetailScreen(
                         ?.withMinute(endTimePickerState.minute)
                 }
 
+                Log.i("TimeDetailScreen", "dateTime: $dateTime")
+
                 // If end time is before start time, show error
                 if (editingTime == "end" && dateTime?.isBefore(state.selectedRecord?.startDateTime) == true) {
                     showTimePicker = false
                     snackScope.launch {
                         snackState.showSnackbar("End time cannot be before start time")
+                    }
+                    return@TimePickerDialog
+                }
+
+                // Prevent setting start time after end time or present time
+                if (editingTime == "start" && (dateTime?.isAfter(state.selectedRecord?.endDateTime) == true || dateTime?.isAfter(
+                        ZonedDateTime.now()
+                    ) == true)
+                ) {
+                    showTimePicker = false
+                    snackScope.launch {
+                        snackState.showSnackbar("Start time cannot be after end time or present time")
                     }
                     return@TimePickerDialog
                 }
@@ -159,27 +181,25 @@ fun TimeDetailScreen(
             confirmButton = {
                 Button(onClick = {
                     if (editingTime == "start") {
-                        val newDate = LocalDateTime.ofInstant(
+                        val newDate = ZonedDateTime.ofInstant(
                             Instant.ofEpochMilli(startDatePickerState.selectedDateMillis!!),
                             ZoneOffset.UTC
                         )
                         // Set time to start time
                         val time = state.selectedRecord?.startDateTime?.toLocalTime()
                         val newDateTime = newDate.withHour(time?.hour!!).withMinute(time.minute)
-                        val newDateTimeZoned = ZonedDateTime.of(newDateTime, ZoneOffset.UTC)
 
-                        viewModel.modifySelectedRecordDate(newDateTimeZoned, null)
+                        viewModel.modifySelectedRecordDate(newDateTime, null)
                     } else {
-                        val newDate = LocalDateTime.ofInstant(
+                        val newDate = ZonedDateTime.ofInstant(
                             Instant.ofEpochMilli(endDatePickerState.selectedDateMillis!!),
                             ZoneOffset.UTC
                         )
                         // Set time to end time
                         val time = state.selectedRecord?.endDateTime?.toLocalTime()
                         val newDateTime = newDate.withHour(time?.hour!!).withMinute(time.minute)
-                        val newDateTimeZoned = ZonedDateTime.of(newDateTime, ZoneOffset.UTC)
 
-                        viewModel.modifySelectedRecordDate(null, newDateTimeZoned)
+                        viewModel.modifySelectedRecordDate(null, newDateTime)
                     }
 
                     showDatePicker = false
@@ -230,6 +250,15 @@ fun TimeDetailScreen(
             }
         }
     }
+
+
+    val context = LocalContext.current
+    LaunchedEffect(viewModel, context) {
+        viewModel.errorFlow.collect { result ->
+            snackState.showSnackbar(result)
+        }
+    }
+
 
     Scaffold(
         bottomBar = {

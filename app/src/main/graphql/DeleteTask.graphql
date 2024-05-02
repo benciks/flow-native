@@ -11,5 +11,10 @@ mutation deleteTask($id: ID!) {
         priority
         project
         tags
+        depends
+        parent
+        recur
+        until
+        start
     }
 }

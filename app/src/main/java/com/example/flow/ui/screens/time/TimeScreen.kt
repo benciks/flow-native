@@ -2,6 +2,7 @@ package com.example.flow.ui.screens.time
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -25,28 +27,35 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.flow.R
 import com.example.flow.TimeNavGraph
 import com.example.flow.data.model.TimeRecord
 import com.example.flow.ui.components.BottomNav
@@ -80,74 +89,132 @@ fun TimeScreen(
         }
     }
 
+    val snackBarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(viewModel, context) {
+        viewModel.errorFlow.collect { result ->
+            snackBarHostState.showSnackbar(result)
+        }
+    }
+
     Scaffold(
         modifier = Modifier.nestedScroll(refreshState.nestedScrollConnection),
         bottomBar = {
             BottomNav(navController)
-        }
-    ) { paddingValues ->
-        if (state.isLoading) {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                CircularProgressIndicator()
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    if (!state.isTracking) {
+                        viewModel.startTimer()
+                    } else {
+                        viewModel.stopTimer()
+                    }
+                },
+            ) {
+                if (!state.isTracking) {
+                    Icon(Icons.Default.PlayArrow, contentDescription = "Play")
+                } else {
+                    Icon(Icons.Default.Stop, contentDescription = "Stop")
+                }
             }
-        } else {
-            Box(Modifier.padding(paddingValues)) {
-                LazyColumn(
-                    contentPadding = PaddingValues(
-                        top = paddingValues.calculateTopPadding() + 16.dp,
-                        bottom = paddingValues.calculateBottomPadding() + 8.dp,
-                        start = 16.dp,
-                        end = 16.dp
+        },
+        snackbarHost = { SnackbarHost(snackBarHostState) }
+    ) { paddingValues ->
+        Box(Modifier.padding(paddingValues)) {
+            LazyColumn(
+                contentPadding = PaddingValues(
+                    top = paddingValues.calculateTopPadding() + 16.dp,
+                    bottom = paddingValues.calculateBottomPadding() + 8.dp,
+                    start = 16.dp,
+                    end = 16.dp
+                )
+            ) {
+                item {
+                    TimerHeader(
+                        isTracking = state.isTracking,
+                        startTimer = viewModel::startTimer,
+                        stopTimer = viewModel::stopTimer,
+                        currentTime = state.currentTimeSeconds,
+                        secondsToTime = viewModel::secondsToTime,
+                        startedAt = state.startedAt,
+                        navController = navController,
+                        selectCurrentRecord = viewModel::selectCurrentRecord
                     )
-                ) {
-                    item {
-                        TimerHeader(
-                            isTracking = state.isTracking,
-                            startTimer = viewModel::startTimer,
-                            stopTimer = viewModel::stopTimer,
-                            currentTime = state.currentTimeSeconds,
-                            secondsToTime = viewModel::secondsToTime,
-                            startedAt = state.startedAt,
-                            navController = navController,
-                            selectCurrentRecord = viewModel::selectCurrentRecord
+                }
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 24.dp, bottom = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+
+                        Text(
+                            text = "Time Records",
+                            fontSize = MaterialTheme.typography.headlineMedium.fontSize,
+                            fontWeight = FontWeight.Bold,
                         )
                     }
+                }
+                if (state.isLoading) {
                     item {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 24.dp, bottom = 12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center
                         ) {
-
-                            Text(
-                                text = "Time Records",
-                                fontSize = MaterialTheme.typography.headlineMedium.fontSize,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.Black
-                            )
+                            CircularProgressIndicator()
                         }
                     }
-                    items(state.timeRecords, key = { it.end }) {
-                        Box(modifier = Modifier.animateItemPlacement()) {
-                            TimeRecordItem(
-                                it,
-                                viewModel::toDisplayDateTime,
-                                viewModel::displayDifference,
-                                navController,
-                                viewModel::onSelectRecord
-                            )
+                } else {
+                    if (state.timeRecords.isEmpty()) {
+                        item {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(top = 64.dp)
+                            ) {
+                                Image(
+                                    painter = painterResource(R.drawable.coffee),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(240.dp),
+                                )
+                                Text(
+                                    "No time records",
+                                    fontSize = 20.sp,
+                                    modifier = Modifier.padding(top = 16.dp),
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    "Add a time record by starting the timer.",
+                                    fontSize = 14.sp
+                                )
+                            }
                         }
-                        Spacer(modifier = Modifier.height(8.dp))
+                    } else {
+                        items(state.timeRecords, key = { it.end }) {
+                            Box(modifier = Modifier.animateItemPlacement()) {
+                                TimeRecordItem(
+                                    it,
+                                    viewModel::toDisplayDateTime,
+                                    viewModel::displayDifference,
+                                    navController,
+                                    viewModel::onSelectRecord
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
                     }
                 }
-
-                PullToRefreshContainer(
-                    modifier = Modifier.align(Alignment.TopCenter),
-                    state = refreshState,
-                )
             }
+
+
+            PullToRefreshContainer(
+                modifier = Modifier.align(Alignment.TopCenter),
+                state = refreshState,
+            )
         }
     }
 }

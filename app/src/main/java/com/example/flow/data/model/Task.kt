@@ -14,6 +14,12 @@ data class Task(
     val due: String,
     val project: String,
     val tags: List<String>,
+    val depends: List<String>,
+    val parent: String?,
+    val recur: String?,
+    val until: String?,
+    val start: String?,
 
-    val dueDateTime: ZonedDateTime?
+    val dueDateTime: ZonedDateTime?,
+    val untilDateTime: ZonedDateTime?
 )

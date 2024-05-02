@@ -11,5 +11,10 @@ query Tasks($filter: TaskFilter) {
         priority
         project
         tags
+        depends
+        parent
+        recur
+        until
+        start
     }
 }

@@ -1,5 +1,6 @@
 package com.example.flow.ui.screens.tasks
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.apollographql.apollo3.api.Optional
@@ -8,9 +9,11 @@ import com.example.flow.data.model.TaskFilterModel
 import com.example.flow.data.repository.TaskRepository
 import com.example.flow.type.TaskFilter
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.ZoneId
@@ -21,12 +24,14 @@ import javax.inject.Inject
 data class TasksState(
     val tasks: List<Task> = emptyList(),
     val isLoading: Boolean = false,
+    val isEmpty: Boolean = false,
     val recentProjects: List<String> = emptyList(),
     val recentTags: List<String> = emptyList(),
     val view: String = "all",
     val selectedTask: Task? = null,
     val appliedFilter: Optional<TaskFilter> = Optional.Absent,
-    val filter: TaskFilterModel = TaskFilterModel(status = "pending")
+    val filter: TaskFilterModel = TaskFilterModel(status = "pending"),
+    val allTasks: List<Task> = emptyList()
 )
 
 @HiltViewModel
@@ -35,6 +40,10 @@ class TasksViewModel @Inject constructor(
 ) : ViewModel() {
     private val _state = MutableStateFlow(TasksState())
     val state = _state.asStateFlow()
+
+    private val errorChan = Channel<String>()
+    val errorFlow = errorChan.receiveAsFlow()
+
 
     init {
         initializeViewModel()
@@ -69,15 +78,31 @@ class TasksViewModel @Inject constructor(
 
     fun fetchTasks() {
         viewModelScope.launch {
-            val tasks = tasksRepository.getTasks(state.value.appliedFilter)
-            val recentProjects = tasksRepository.getRecentProjects()
-            val recentTags = tasksRepository.getRecentTags()
+            _state.update { it.copy(isLoading = true) }
+            var tasks: List<Task> = emptyList()
+            var recentProjects: List<String> = emptyList()
+            var recentTags: List<String> = emptyList()
+            var allTasks: List<Task> = emptyList()
+
+            try {
+                tasks = tasksRepository.getTasks(state.value.appliedFilter)
+                recentProjects = tasksRepository.getRecentProjects()
+                recentTags = tasksRepository.getRecentTags()
+                allTasks = tasksRepository.getTasks(Optional.Absent)
+            } catch (e: Exception) {
+                errorChan.send(e.message ?: "An error occurred")
+            }
+            // Remove all that don't have id
+            allTasks = allTasks.filter { it.id != "0" }
 
             _state.update {
                 it.copy(
                     tasks = tasks,
                     recentProjects = recentProjects,
-                    recentTags = recentTags
+                    recentTags = recentTags,
+                    isEmpty = tasks.isEmpty(),
+                    allTasks = allTasks,
+                    isLoading = false
                 )
             }
         }
@@ -85,10 +110,16 @@ class TasksViewModel @Inject constructor(
 
     private fun initializeViewModel() {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
+            _state.update {
+                it.copy(isLoading = true)
+            }
+
             applyFilter()
             fetchTasks()
-            _state.update { it.copy(isLoading = false) }
+
+            _state.update {
+                it.copy(isLoading = false)
+            }
         }
     }
 
@@ -123,7 +154,11 @@ class TasksViewModel @Inject constructor(
                 priorityOptional = Optional.Present(priority)
             }
 
-            tasksRepository.createTask(description, due, projectOptional, priorityOptional)
+            try {
+                tasksRepository.createTask(description, due, projectOptional, priorityOptional)
+            } catch (e: Exception) {
+                errorChan.send(e.message ?: "An error occurred")
+            }
             fetchTasks()
         }
     }
@@ -131,7 +166,11 @@ class TasksViewModel @Inject constructor(
     fun markTaskDone(taskId: String) {
         if (taskId == "0") return
         viewModelScope.launch {
-            tasksRepository.markDone(taskId)
+            try {
+                tasksRepository.markDone(taskId)
+            } catch (e: Exception) {
+                errorChan.send(e.message ?: "An error occurred")
+            }
             fetchTasks()
         }
     }
@@ -154,13 +193,19 @@ class TasksViewModel @Inject constructor(
         dueDate: ZonedDateTime? = null,
         project: String? = null,
         priority: String? = null,
-        tags: List<String> = emptyList()
+        tags: List<String> = emptyList(),
+        depends: List<String> = emptyList(),
+        recurring: String? = null,
+        until: ZonedDateTime? = null
     ) {
         viewModelScope.launch {
             var desc: Optional<String> = Optional.Absent
             var due: Optional<String> = Optional.Absent
             var projectOptional: Optional<String> = Optional.Absent
             var priorityOptional: Optional<String> = Optional.Absent
+            val dependsOptional: Optional.Present<List<String>> = Optional.Present(depends)
+            var recurringOptional: Optional<String> = Optional.Absent
+            var untilOptional: Optional<String> = Optional.Absent
 
             if (description != null) {
                 desc = Optional.Present(description)
@@ -186,27 +231,73 @@ class TasksViewModel @Inject constructor(
                 priorityOptional = Optional.Present(priority)
             }
 
-            tasksRepository.editTask(
-                taskId,
-                desc,
-                due,
-                projectOptional,
-                priorityOptional,
-                Optional.Present(tags)
-            )
+            if (recurring != null) {
+                recurringOptional = Optional.Present(recurring)
+            }
+
+            if (until != null) {
+                untilOptional = Optional.Present(
+                    until.format(
+                        DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'").withZone(
+                            ZoneId.of("UTC")
+                        )
+                    )
+                )
+            }
+
+            try {
+                tasksRepository.editTask(
+                    taskId,
+                    desc,
+                    due,
+                    projectOptional,
+                    priorityOptional,
+                    Optional.Present(tags),
+                    dependsOptional,
+                    recurringOptional,
+                    untilOptional
+                )
+            } catch (e: Exception) {
+                errorChan.send(e.message ?: "An error occurred")
+            }
 
             fetchTasks()
         }
     }
 
+    fun startTask(taskId: String) {
+        viewModelScope.launch {
+            try {
+                tasksRepository.startTask(taskId)
+            } catch (e: Exception) {
+                errorChan.send(e.message ?: "An error occurred")
+            }
+            fetchTasks()
+        }
+    }
+
+    fun stopTask(taskId: String) {
+        viewModelScope.launch {
+            try {
+                tasksRepository.stopTask(taskId)
+            } catch (e: Exception) {
+                errorChan.send(e.message ?: "An error occurred")
+            }
+
+            fetchTasks()
+        }
+    }
+
+
     fun deleteTask(taskId: String) {
         viewModelScope.launch {
-            tasksRepository.deleteTask(taskId)
-            _state.update {
-                it.copy(
-                    tasks = tasksRepository.getTasks(state.value.appliedFilter),
-                )
+            try {
+                tasksRepository.deleteTask(taskId)
+            } catch (e: Exception) {
+                errorChan.send(e.message ?: "An error occurred")
             }
+
+            fetchTasks()
         }
     }
 }

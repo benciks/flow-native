@@ -1,5 +1,5 @@
-mutation markTaskDone($taskId: ID!) {
-    markTaskDone(id: $taskId) {
+mutation startTask($id: ID!) {
+    startTask(id: $id) {
         id
         description
         entry
@@ -7,8 +7,8 @@ mutation markTaskDone($taskId: ID!) {
         uuid
         urgency
         status
-        due
         priority
+        due
         project
         tags
         depends

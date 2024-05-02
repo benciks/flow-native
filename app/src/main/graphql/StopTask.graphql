@@ -1,5 +1,5 @@
-mutation markTaskDone($taskId: ID!) {
-    markTaskDone(id: $taskId) {
+mutation stopTask($taskId: ID!) {
+    stopTask(id: $taskId) {
         id
         description
         entry

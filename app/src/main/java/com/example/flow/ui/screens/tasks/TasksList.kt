@@ -1,8 +1,9 @@
 package com.example.flow.ui.screens.tasks
 
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,18 +16,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -34,8 +32,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
@@ -51,32 +50,31 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.capitalize
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.example.flow.R
 import com.example.flow.TaskNavGraph
+import com.example.flow.data.model.AuthResult
 import com.example.flow.data.model.TaskFilterModel
 import com.example.flow.ui.components.BottomNav
 import com.example.flow.ui.components.tasks.CreateTaskSheet
 import com.example.flow.ui.components.tasks.TaskDateSheet
 import com.example.flow.ui.components.tasks.TaskItem
 import com.example.flow.ui.components.tasks.TaskTimeSheet
+import com.example.flow.ui.screens.destinations.LoginScreenDestination
 import com.example.flow.ui.screens.destinations.TaskDetailDestination
+import com.example.flow.ui.screens.destinations.TimeScreenDestination
 import com.ramcosta.composedestinations.annotation.Destination
-import com.ramcosta.composedestinations.manualcomposablecalls.DestinationLambda
 import kotlinx.coroutines.launch
 import java.time.LocalTime
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 @OptIn(
     ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class,
@@ -92,7 +90,6 @@ fun TasksScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var showSheet by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
     var filterOpen by remember { mutableStateOf(false) }
 
     val now = ZonedDateTime.now()
@@ -123,6 +120,15 @@ fun TasksScreen(
         }
     }
 
+    val views = listOf("pending", "active", "completed")
+
+    val snackBarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(viewModel, context) {
+        viewModel.errorFlow.collect { result ->
+            snackBarHostState.showSnackbar(result)
+        }
+    }
+
     if (filterOpen) {
         TaskFilterSheet(
             onDismiss = {
@@ -142,7 +148,9 @@ fun TasksScreen(
             onDismiss = { showSheet = false },
             onCreate = { description, due, project, priority ->
                 viewModel.createTask(description, due, project, priority)
-            })
+            },
+            recentProjects = state.recentProjects
+        )
     }
 
     Scaffold(
@@ -159,133 +167,204 @@ fun TasksScreen(
                     contentDescription = "Create task"
                 )
             }
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackBarHostState)
         }
     ) { paddingValues ->
-        if (state.isLoading) {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                CircularProgressIndicator()
-            }
-        } else {
-            Box(Modifier.padding(paddingValues)) {
-                LazyColumn(
-                    contentPadding = PaddingValues(
-                        top = paddingValues.calculateTopPadding() + 16.dp,
-                        bottom = paddingValues.calculateBottomPadding() + 8.dp,
-                        start = 16.dp,
-                        end = 16.dp
-                    ),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    item {
-                        Column {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 16.dp, top = 8.dp)
-                            ) {
-                                Text(
-                                    text = "Tasks",
-                                    fontSize = MaterialTheme.typography.displaySmall.fontSize,
-                                    fontWeight = FontWeight.Bold,
-                                )
-                                if (state.filter == TaskFilterModel(status = "pending")) {
-                                    OutlinedButton(onClick = {
-                                        filterOpen = true
-                                    }) {
-                                        Text("Filter")
-                                    }
-                                } else {
-                                    Button(onClick = { filterOpen = true }) {
-                                        Text("Filter")
-                                    }
+
+        Box(Modifier.padding(paddingValues)) {
+            LazyColumn(
+                contentPadding = PaddingValues(
+                    top = paddingValues.calculateTopPadding() + 16.dp,
+                    bottom = paddingValues.calculateBottomPadding() + 8.dp,
+                    start = 16.dp,
+                    end = 16.dp
+                ),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                item {
+                    Column {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp, top = 8.dp)
+                        ) {
+                            Text(
+                                text = "Tasks",
+                                fontSize = MaterialTheme.typography.displaySmall.fontSize,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            if (state.filter == TaskFilterModel(status = "pending")) {
+                                OutlinedButton(onClick = {
+                                    filterOpen = true
+                                }) {
+                                    Text("Filter")
+                                }
+                            } else {
+                                Button(onClick = { filterOpen = true }) {
+                                    Text("Filter")
                                 }
                             }
                         }
-                    }
-                    if (tasksToday.isNotEmpty()) {
-                        item {
-                            Text(
-                                text = "Today",
-                                fontSize = MaterialTheme.typography.titleMedium.fontSize,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier
-                                    .padding(bottom = 8.dp, top = 16.dp)
-                                    .alpha(0.5f)
-                            )
+
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        ) {
+                            for (view in views) {
+                                FilterChip(
+                                    selected = state.filter.status == view,
+                                    onClick = {
+                                        viewModel.applyFilter(state.filter.copy(status = view))
+                                        viewModel.fetchTasks()
+                                    },
+                                    label = { Text(view.capitalize()) }
+                                )
+                            }
                         }
-                    }
-                    items(tasksToday, key = { it.uuid }) {
-                        Box(modifier = Modifier.animateItemPlacement()) {
-                            TaskItem(
-                                it,
-                                onCheck = { viewModel.markTaskDone(it.id) },
-                                onClick = {
-                                    viewModel.selectTask(it)
-                                    navController.navigate(TaskDetailDestination.route)
-                                }
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-                    if (tasksTomorrow.isNotEmpty()) {
-                        item {
-                            Text(
-                                text = "Tomorrow",
-                                fontSize = MaterialTheme.typography.titleMedium.fontSize,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier
-                                    .padding(bottom = 8.dp, top = 16.dp)
-                                    .alpha(0.5f)
-                            )
-                        }
-                    }
-                    items(tasksTomorrow, key = { it.uuid }) {
-                        Box(modifier = Modifier.animateItemPlacement()) {
-                            TaskItem(
-                                it,
-                                onCheck = { viewModel.markTaskDone(it.id) },
-                                onClick = {
-                                    viewModel.selectTask(it)
-                                    navController.navigate(TaskDetailDestination.route)
-                                }
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-                    if (tasksUpcoming.isNotEmpty()) {
-                        item {
-                            Text(
-                                text = "Upcoming",
-                                fontSize = MaterialTheme.typography.titleMedium.fontSize,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier
-                                    .padding(bottom = 8.dp, top = 16.dp)
-                                    .alpha(0.5f)
-                            )
-                        }
-                    }
-                    items(tasksUpcoming, key = { it.uuid }) {
-                        Box(modifier = Modifier.animateItemPlacement()) {
-                            TaskItem(
-                                it,
-                                onCheck = { viewModel.markTaskDone(it.id) },
-                                onClick = {
-                                    viewModel.selectTask(it)
-                                    navController.navigate(TaskDetailDestination.route)
-                                }
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
 
-                PullToRefreshContainer(
-                    modifier = Modifier.align(Alignment.TopCenter),
-                    state = refreshState,
-                )
+                if (state.isLoading) {
+                    item {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                } else {
+                    if (state.tasks.isEmpty()) {
+                        item {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(top = 64.dp)
+                            ) {
+                                Image(
+                                    painter = painterResource(R.drawable.cat),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(240.dp),
+                                )
+                                Text("No tasks", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                                Text("Create a task or adjust filter", fontSize = 14.sp)
+                            }
+                        }
+                    } else {
+                        if (tasksToday.isNotEmpty()) {
+                            item {
+                                Text(
+                                    text = "Today",
+                                    fontSize = MaterialTheme.typography.titleMedium.fontSize,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier
+                                        .padding(bottom = 8.dp, top = 16.dp)
+                                        .alpha(0.5f)
+                                        .animateItemPlacement()
+                                )
+                            }
+                        }
+                        items(tasksToday, key = { it.uuid }) {
+                            Box(modifier = Modifier.animateItemPlacement()) {
+                                TaskItem(
+                                    it,
+                                    onCheck = { viewModel.markTaskDone(it.id) },
+                                    onClick = {
+                                        viewModel.selectTask(it)
+                                        navController.navigate(TaskDetailDestination.route)
+                                    },
+                                    onStart = {
+                                        if (it.start?.isNotEmpty() == true) {
+                                            viewModel.stopTask(it.id)
+                                        } else {
+                                            viewModel.startTask(it.id)
+                                        }
+                                    }
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                        if (tasksTomorrow.isNotEmpty()) {
+                            item {
+                                Text(
+                                    text = "Tomorrow",
+                                    fontSize = MaterialTheme.typography.titleMedium.fontSize,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier
+                                        .padding(bottom = 8.dp, top = 16.dp)
+                                        .alpha(0.5f)
+                                        .animateItemPlacement()
+                                )
+                            }
+                        }
+                        items(tasksTomorrow, key = { it.uuid }) {
+                            Box(modifier = Modifier.animateItemPlacement()) {
+                                TaskItem(
+                                    it,
+                                    onCheck = { viewModel.markTaskDone(it.id) },
+                                    onClick = {
+                                        viewModel.selectTask(it)
+                                        navController.navigate(TaskDetailDestination.route)
+                                    },
+                                    onStart = {
+                                        if (it.start?.isNotEmpty() == true) {
+                                            viewModel.stopTask(it.id)
+                                        } else {
+                                            viewModel.startTask(it.id)
+                                        }
+                                    }
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                        if (tasksUpcoming.isNotEmpty()) {
+                            item {
+                                Text(
+                                    text = "Upcoming",
+                                    fontSize = MaterialTheme.typography.titleMedium.fontSize,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier
+                                        .padding(bottom = 8.dp, top = 16.dp)
+                                        .alpha(0.5f)
+                                        .animateItemPlacement()
+                                )
+                            }
+                        }
+                        items(tasksUpcoming, key = { it.uuid }) {
+                            Box(modifier = Modifier.animateItemPlacement()) {
+                                TaskItem(
+                                    it,
+                                    onCheck = { viewModel.markTaskDone(it.id) },
+                                    onClick = {
+                                        viewModel.selectTask(it)
+                                        navController.navigate(TaskDetailDestination.route)
+                                    },
+                                    onStart = {
+                                        if (it.start?.isNotEmpty() == true) {
+                                            viewModel.stopTask(it.id)
+                                        } else {
+                                            viewModel.startTask(it.id)
+                                        }
+                                    }
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+                }
             }
+
+            PullToRefreshContainer(
+                modifier = Modifier.align(Alignment.TopCenter),
+                state = refreshState,
+            )
         }
     }
 }
@@ -307,7 +386,8 @@ fun TaskFilterSheet(
     val scope = rememberCoroutineScope()
     var selectedDueDate by remember { mutableStateOf(filter.due) }
 
-    val statuses = listOf("pending", "active", "completed", "deleted")
+    val statuses = listOf("pending", "active", "completed", "deleted", "blocked", "recurring")
+
 
     if (dateSheet) {
         TaskDateSheet(onDismiss = {

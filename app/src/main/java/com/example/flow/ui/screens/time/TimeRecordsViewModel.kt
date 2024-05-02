@@ -8,8 +8,10 @@ import com.apollographql.apollo3.api.Optional
 import com.example.flow.data.model.TimeRecord
 import com.example.flow.data.repository.TimeRecordRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
@@ -24,6 +26,7 @@ data class TimeRecordsState(
     val timeRecords: List<TimeRecord> = emptyList(),
     val isLoading: Boolean = false,
     val isTracking: Boolean = false,
+    val timerRunning: Boolean = false,
     val selectedRecord: TimeRecord? = null,
     val currentTimeSeconds: Int = 0,
     val startedAt: String? = null,
@@ -38,22 +41,29 @@ class TimeRecordsViewModel @Inject constructor(
     private val _state = MutableStateFlow(TimeRecordsState())
     val state = _state.asStateFlow()
 
+    private val errorChan = Channel<String>()
+    val errorFlow = errorChan.receiveAsFlow()
+
     init {
         initializeViewModel()
     }
 
     fun fetchTimeRecords() {
         viewModelScope.launch {
-            val timeRecords = timeRecordsRepository.getTimeRecords()
-            val recentTags = timeRecords.flatMap { it.tags }.distinct()
-            _state.update {
-                it.copy(
-                    timeRecords = timeRecords,
-                    recentTags = recentTags
-                )
-            }
+            try {
+                val timeRecords = timeRecordsRepository.getTimeRecords()
+                val recentTags = timeRecords.flatMap { it.tags }.distinct()
+                _state.update {
+                    it.copy(
+                        timeRecords = timeRecords,
+                        recentTags = recentTags
+                    )
+                }
 
-            restartTimerIfRunning(timeRecords)
+                restartTimerIfRunning(timeRecords)
+            } catch (e: Exception) {
+                errorChan.send(e.message ?: "Error fetching time records")
+            }
         }
     }
 
@@ -76,7 +86,7 @@ class TimeRecordsViewModel @Inject constructor(
 
         Log.i(
             "TimeRecordsViewModel",
-            "toDisplayDateTime: ${date.toLocalDate()} ${LocalDateTime.now().toLocalDate()}"
+            "toDisplayDateTime: ${date.toLocalDateTime()} ${ZonedDateTime.now().toLocalTime()}"
         )
 
         val now = ZonedDateTime.now()
@@ -135,12 +145,18 @@ class TimeRecordsViewModel @Inject constructor(
 
     fun startTimer() {
         viewModelScope.launch {
-            timeRecordsRepository.startTimer()
+            var timeRecords: List<TimeRecord> = emptyList()
+            try {
+                timeRecordsRepository.startTimer()
+                timeRecords = timeRecordsRepository.getTimeRecords()
+            } catch (e: Exception) {
+                errorChan.send(e.message ?: "Error starting timer")
+            }
 
             _state.update {
                 it.copy(
                     isTracking = true,
-                    timeRecords = timeRecordsRepository.getTimeRecords(),
+                    timeRecords = timeRecords,
                     startedAt = ZonedDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
                 )
             }
@@ -151,6 +167,11 @@ class TimeRecordsViewModel @Inject constructor(
 
     private fun updateTimer() {
         viewModelScope.launch {
+            if (state.value.timerRunning) {
+                return@launch
+            }
+            _state.update { it.copy(timerRunning = true) }
+
             while (state.value.isTracking) {
                 _state.update {
                     it.copy(currentTimeSeconds = it.currentTimeSeconds.plus(1))
@@ -162,13 +183,17 @@ class TimeRecordsViewModel @Inject constructor(
 
     fun stopTimer() {
         viewModelScope.launch {
-            timeRecordsRepository.stopTimer()
-            _state.update {
-                it.copy(
-                    timeRecords = timeRecordsRepository.getTimeRecords(),
-                    isTracking = false,
-                    currentTimeSeconds = 0
-                )
+            try {
+                timeRecordsRepository.stopTimer()
+                _state.update {
+                    it.copy(
+                        timeRecords = timeRecordsRepository.getTimeRecords(),
+                        isTracking = false,
+                        currentTimeSeconds = 0
+                    )
+                }
+            } catch (e: Exception) {
+                errorChan.send(e.message ?: "Error stopping timer")
             }
         }
     }
@@ -203,12 +228,17 @@ class TimeRecordsViewModel @Inject constructor(
     fun deleteSelectedRecord() {
         viewModelScope.launch {
             val selectedRecord = state.value.selectedRecord ?: return@launch
-            timeRecordsRepository.deleteTimeRecord(selectedRecord.id)
-            _state.update {
-                it.copy(
-                    timeRecords = timeRecordsRepository.getTimeRecords(),
-                    selectedRecord = null
-                )
+
+            try {
+                timeRecordsRepository.deleteTimeRecord(selectedRecord.id)
+                _state.update {
+                    it.copy(
+                        timeRecords = timeRecordsRepository.getTimeRecords(),
+                        selectedRecord = null
+                    )
+                }
+            } catch (e: Exception) {
+                errorChan.send(e.message ?: "Error deleting time record")
             }
         }
     }
@@ -216,12 +246,17 @@ class TimeRecordsViewModel @Inject constructor(
     fun tagSelectedRecord(tag: String) {
         viewModelScope.launch {
             val selectedRecord = state.value.selectedRecord ?: return@launch
-            val timeRecord = timeRecordsRepository.tagTimeRecord(selectedRecord.id, tag)
-            _state.update {
-                it.copy(
-                    timeRecords = timeRecordsRepository.getTimeRecords(),
-                    selectedRecord = timeRecord
-                )
+
+            try {
+                val timeRecord = timeRecordsRepository.tagTimeRecord(selectedRecord.id, tag)
+                _state.update {
+                    it.copy(
+                        timeRecords = timeRecordsRepository.getTimeRecords(),
+                        selectedRecord = timeRecord
+                    )
+                }
+            } catch (e: Exception) {
+                errorChan.send(e.message ?: "Error tagging time record")
             }
         }
     }
@@ -229,12 +264,16 @@ class TimeRecordsViewModel @Inject constructor(
     fun untagSelectedRecord(tag: String) {
         viewModelScope.launch {
             val selectedRecord = state.value.selectedRecord ?: return@launch
-            val timeRecord = timeRecordsRepository.untagTimeRecord(selectedRecord.id, tag)
-            _state.update {
-                it.copy(
-                    timeRecords = timeRecordsRepository.getTimeRecords(),
-                    selectedRecord = timeRecord
-                )
+            try {
+                val timeRecord = timeRecordsRepository.untagTimeRecord(selectedRecord.id, tag)
+                _state.update {
+                    it.copy(
+                        timeRecords = timeRecordsRepository.getTimeRecords(),
+                        selectedRecord = timeRecord
+                    )
+                }
+            } catch (e: Exception) {
+                errorChan.send(e.message ?: "Error untagging time record")
             }
         }
     }
@@ -246,25 +285,39 @@ class TimeRecordsViewModel @Inject constructor(
 
             if (start != null) {
                 startTimestamp =
-                    Optional.Present(start.format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'")))
+                    Optional.Present(
+                        start.format(
+                            DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'")
+                                .withZone(ZoneId.of("UTC"))
+                        )
+                    )
             }
             if (end != null) {
                 endTimestamp =
-                    Optional.Present(end.format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'")))
+                    Optional.Present(
+                        end.format(
+                            DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'")
+                                .withZone(ZoneId.of("UTC"))
+                        )
+                    )
             }
 
             val selectedRecord = state.value.selectedRecord ?: return@launch
-            val timeRecord = timeRecordsRepository.modifyTimeRecordDate(
-                selectedRecord.id,
-                startTimestamp,
-                endTimestamp
-            )
-            Log.i("TimeRecordsViewModel", "modifySelectedRecordDate: $timeRecord")
-            _state.update {
-                it.copy(
-                    timeRecords = timeRecordsRepository.getTimeRecords(),
-                    selectedRecord = timeRecord
+
+            try {
+                val timeRecord = timeRecordsRepository.modifyTimeRecordDate(
+                    selectedRecord.id,
+                    startTimestamp,
+                    endTimestamp
                 )
+                _state.update {
+                    it.copy(
+                        timeRecords = timeRecordsRepository.getTimeRecords(),
+                        selectedRecord = timeRecord
+                    )
+                }
+            } catch (e: Exception) {
+                errorChan.send(e.message ?: "Error modifying time record date")
             }
         }
     }

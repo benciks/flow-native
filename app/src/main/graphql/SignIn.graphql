@@ -4,6 +4,7 @@ mutation signIn($username: String!, $password: String!) {
         user {
             id
             username
+            timewHook
         }
     }
 }

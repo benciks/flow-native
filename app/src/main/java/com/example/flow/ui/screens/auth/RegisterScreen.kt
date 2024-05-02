@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
@@ -21,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -33,7 +35,6 @@ import com.example.flow.ui.screens.destinations.TimeScreenDestination
 import com.ramcosta.composedestinations.annotation.Destination
 import javax.inject.Inject
 
-@RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
 @Destination
 @Composable
 fun RegisterScreen(
@@ -82,13 +83,18 @@ fun RegisterScreen(
                 TextField(
                     value = email,
                     onValueChange = { email = it },
-                    placeholder = { Text("Username") }
+                    placeholder = { Text("Username") },
+                    singleLine = true
                 )
                 TextField(
                     placeholder = { Text("Password") },
                     value = password,
                     onValueChange = { password = it },
-                    visualTransformation = PasswordVisualTransformation()
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password
+                    ),
+                    singleLine = true
                 )
                 Button(onClick = { viewModel.signUp(email, password) }) {
                     Text("Sign up")

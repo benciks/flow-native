@@ -11,6 +11,10 @@ android {
     namespace = "com.example.flow"
     compileSdk = 34
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         applicationId = "com.example.flow"
         minSdk = 24

@@ -1,5 +1,5 @@
-mutation editTask($id: ID!, $description: String, $priority: String, $due: String, $project: String, $tags: [String]) {
-    editTask(id: $id, description: $description, priority: $priority, due: $due, project: $project, tags: $tags) {
+mutation editTask($id: ID!, $description: String, $priority: String, $due: String, $project: String, $tags: [String], $depends: [String], $recurring: String, $until: String) {
+    editTask(id: $id, description: $description, priority: $priority, due: $due, project: $project, tags: $tags, depends: $depends, recurring: $recurring, until: $until) {
         id
         description
         entry
@@ -11,5 +11,10 @@ mutation editTask($id: ID!, $description: String, $priority: String, $due: Strin
         priority
         project
         tags
+        depends
+        parent
+        recur
+        until
+        start
     }
 }

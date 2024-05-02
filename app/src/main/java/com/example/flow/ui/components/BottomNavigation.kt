@@ -33,7 +33,6 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.example.flow.ui.screens.NavGraphs
 import com.example.flow.ui.screens.appCurrentDestinationAsState
-import com.example.flow.ui.screens.destinations.CalendarScreenDestination
 import com.example.flow.ui.screens.destinations.Destination
 import com.example.flow.ui.screens.destinations.ProfileScreenDestination
 import com.example.flow.ui.screens.destinations.TasksScreenDestination

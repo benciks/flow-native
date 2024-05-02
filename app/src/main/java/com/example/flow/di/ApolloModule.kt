@@ -9,6 +9,7 @@ import com.apollographql.apollo3.cache.normalized.api.MemoryCacheFactory
 import com.apollographql.apollo3.cache.normalized.fetchPolicy
 import com.apollographql.apollo3.cache.normalized.normalizedCache
 import com.apollographql.apollo3.network.okHttpClient
+import com.example.flow.BuildConfig
 import com.example.flow.data.repository.TokenRepository
 import com.example.flow.ui.screens.destinations.LoginScreenDestination
 import dagger.Module
@@ -25,6 +26,19 @@ import javax.inject.Singleton
 import okhttp3.OkHttpClient
 import okhttp3.Response
 import okhttp3.logging.HttpLoggingInterceptor
+
+object ApiUrls {
+    const val DEV_BASE_URL = "http://10.0.2.2:3000/query/"
+    const val PROD_BASE_URL = "http://flow.benciks.me/query"
+}
+
+fun getBaseUrl(): String {
+    return if (BuildConfig.DEBUG) {
+        ApiUrls.DEV_BASE_URL
+    } else {
+        ApiUrls.PROD_BASE_URL
+    }
+}
 
 @Module
 @InstallIn(SingletonComponent::class)

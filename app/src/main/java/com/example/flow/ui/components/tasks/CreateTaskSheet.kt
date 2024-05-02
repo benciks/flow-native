@@ -240,7 +240,6 @@ fun CreateTaskSheet(
                 DropdownMenu(
                     expanded = projectExpanded,
                     onDismissRequest = { projectExpanded = false },
-                    offset = DpOffset(0.dp, y = -210.dp),
                     modifier = Modifier.heightIn(max = 200.dp)
                 ) {
                     DropdownMenuItem(

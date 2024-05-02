@@ -11,5 +11,10 @@ mutation CreateTask($description: String!, $project: String, $priority: String, 
         priority
         project
         tags
+        depends
+        parent
+        recur
+        until
+        start
     }
 }
