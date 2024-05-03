@@ -1,8 +1,6 @@
 package com.example.flow.di
 
 import android.content.Context
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.apollographql.apollo3.ApolloClient
 import com.apollographql.apollo3.cache.normalized.FetchPolicy
 import com.apollographql.apollo3.cache.normalized.api.MemoryCacheFactory
@@ -11,25 +9,22 @@ import com.apollographql.apollo3.cache.normalized.normalizedCache
 import com.apollographql.apollo3.network.okHttpClient
 import com.example.flow.BuildConfig
 import com.example.flow.data.repository.TokenRepository
-import com.example.flow.ui.screens.destinations.LoginScreenDestination
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import okhttp3.Interceptor
-import javax.inject.Singleton
 import okhttp3.OkHttpClient
 import okhttp3.Response
 import okhttp3.logging.HttpLoggingInterceptor
+import javax.inject.Singleton
 
 object ApiUrls {
-    const val DEV_BASE_URL = "http://10.0.2.2:3000/query/"
-    const val PROD_BASE_URL = "http://flow.benciks.me/query"
+    const val DEV_BASE_URL = "http://10.0.2.2:3000/query"
+    const val PROD_BASE_URL = "https://flow.benciks.me/query"
 }
 
 fun getBaseUrl(): String {
@@ -60,7 +55,7 @@ object ApolloModule {
             .build()
 
         return ApolloClient.Builder()
-            .serverUrl("http://10.0.2.2:3000/query")
+            .serverUrl("https://flow.benciks.me/query")
             .normalizedCache(cacheFactory)
             .fetchPolicy(FetchPolicy.NetworkFirst)
             .okHttpClient(okHttpClient)

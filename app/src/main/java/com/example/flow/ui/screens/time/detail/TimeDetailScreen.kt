@@ -31,9 +31,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerState
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
@@ -49,26 +49,21 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.flow.TimeNavGraph
 import com.example.flow.ui.components.BottomNav
-import kotlinx.coroutines.launch
-import java.util.Calendar
 import com.example.flow.ui.components.TimePickerDialog
-import com.example.flow.ui.screens.destinations.TagsScreenDestination
 import com.example.flow.ui.screens.destinations.TimeTagsScreenDestination
 import com.example.flow.ui.screens.time.TimeRecordsViewModel
 import com.ramcosta.composedestinations.annotation.Destination
-import com.ramcosta.composedestinations.annotation.RootNavGraph
-import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import kotlinx.coroutines.launch
 import java.time.Instant
-import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @TimeNavGraph
@@ -147,17 +142,17 @@ fun TimeDetailScreen(
                     return@TimePickerDialog
                 }
 
-                // Prevent setting start time after end time or present time
-                if (editingTime == "start" && (dateTime?.isAfter(state.selectedRecord?.endDateTime) == true || dateTime?.isAfter(
-                        ZonedDateTime.now()
-                    ) == true)
+                if (editingTime == "start" && state.selectedRecord?.endDateTime != null && dateTime != null && dateTime.isAfter(
+                        state.selectedRecord?.endDateTime
+                    )
                 ) {
                     showTimePicker = false
                     snackScope.launch {
-                        snackState.showSnackbar("Start time cannot be after end time or present time")
+                        snackState.showSnackbar("Start time cannot be after end time")
                     }
                     return@TimePickerDialog
                 }
+
 
                 // Set the time
                 if (editingTime == "start") {

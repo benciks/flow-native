@@ -1,5 +1,6 @@
 package com.example.flow.ui.screens.time
 
+import android.util.Log
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -35,26 +36,25 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
+import androidx.compose.material3.pulltorefresh.pullToRefresh
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.flow.R
 import com.example.flow.TimeNavGraph
 import com.example.flow.data.model.TimeRecord
@@ -63,10 +63,6 @@ import com.example.flow.ui.screens.destinations.TimeDetailScreenDestination
 import com.example.flow.ui.screens.destinations.TimeTagsScreenDestination
 import com.example.flow.ui.theme.Primary
 import com.ramcosta.composedestinations.annotation.Destination
-import com.ramcosta.composedestinations.annotation.RootNavGraph
-import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-import kotlinx.coroutines.delay
-import java.time.LocalDateTime
 import java.time.ZonedDateTime
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
@@ -81,13 +77,7 @@ fun TimeScreen(
     val context = LocalContext.current
 
     val refreshState = rememberPullToRefreshState()
-    if (refreshState.isRefreshing) {
-        LaunchedEffect(true) {
-            // fetch something
-            viewModel.fetchTimeRecords()
-            refreshState.endRefresh()
-        }
-    }
+    var isRefreshing by remember { mutableStateOf(false) }
 
     val snackBarHostState = remember { SnackbarHostState() }
     LaunchedEffect(viewModel, context) {
@@ -97,7 +87,6 @@ fun TimeScreen(
     }
 
     Scaffold(
-        modifier = Modifier.nestedScroll(refreshState.nestedScrollConnection),
         bottomBar = {
             BottomNav(navController)
         },
@@ -118,13 +107,22 @@ fun TimeScreen(
                 }
             }
         },
-        snackbarHost = { SnackbarHost(snackBarHostState) }
+        snackbarHost = { SnackbarHost(snackBarHostState) },
+        modifier = Modifier.pullToRefresh(
+            state = refreshState,
+            isRefreshing = isRefreshing,
+            onRefresh = {
+                isRefreshing = true
+                Log.i("TimeScreen", "Refreshing")
+                viewModel.fetchTimeRecords()
+                isRefreshing = false
+            })
     ) { paddingValues ->
         Box(Modifier.padding(paddingValues)) {
             LazyColumn(
                 contentPadding = PaddingValues(
-                    top = paddingValues.calculateTopPadding() + 16.dp,
-                    bottom = paddingValues.calculateBottomPadding() + 8.dp,
+                    top = paddingValues.calculateTopPadding() + 4.dp,
+                    bottom = paddingValues.calculateBottomPadding(),
                     start = 16.dp,
                     end = 16.dp
                 )
@@ -174,12 +172,12 @@ fun TimeScreen(
                                 verticalArrangement = Arrangement.Center,
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .padding(top = 64.dp)
+                                    .padding(top = 12.dp)
                             ) {
                                 Image(
                                     painter = painterResource(R.drawable.coffee),
                                     contentDescription = null,
-                                    modifier = Modifier.size(240.dp),
+                                    modifier = Modifier.size(140.dp),
                                 )
                                 Text(
                                     "No time records",
@@ -201,7 +199,12 @@ fun TimeScreen(
                                     viewModel::toDisplayDateTime,
                                     viewModel::displayDifference,
                                     navController,
-                                    viewModel::onSelectRecord
+                                    onSelectItem = {
+                                        if (it.endDateTime != null) {
+                                            viewModel.onSelectRecord(it)
+                                            navController.navigate(TimeDetailScreenDestination.route)
+                                        }
+                                    }
                                 )
                             }
                             Spacer(modifier = Modifier.height(8.dp))
@@ -211,10 +214,6 @@ fun TimeScreen(
             }
 
 
-            PullToRefreshContainer(
-                modifier = Modifier.align(Alignment.TopCenter),
-                state = refreshState,
-            )
         }
     }
 }
@@ -246,7 +245,8 @@ fun TimerHeader(
                     text = secondsToTime(currentTime),
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                     fontSize = MaterialTheme.typography.displayLarge.fontSize,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(
@@ -304,7 +304,6 @@ fun TimeRecordItem(
     OutlinedCard(
         onClick = {
             onSelectItem(record)
-            navController.navigate(TimeDetailScreenDestination.route)
         },
     ) {
         Column(modifier = Modifier.padding(16.dp)) {

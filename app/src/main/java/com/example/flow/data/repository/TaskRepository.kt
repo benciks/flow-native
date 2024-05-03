@@ -12,8 +12,8 @@ import com.example.flow.RecentTaskTagsQuery
 import com.example.flow.StartTaskMutation
 import com.example.flow.StopTaskMutation
 import com.example.flow.TasksQuery
-import com.example.flow.data.model.Task
 import com.example.flow.data.mapper.toTask
+import com.example.flow.data.model.Task
 import com.example.flow.type.TaskFilter
 import javax.inject.Inject
 

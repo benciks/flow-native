@@ -1,6 +1,5 @@
 package com.example.flow.ui.screens.tasks
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.apollographql.apollo3.api.Optional
@@ -12,7 +11,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -28,7 +26,7 @@ data class TasksState(
     val recentProjects: List<String> = emptyList(),
     val recentTags: List<String> = emptyList(),
     val view: String = "all",
-    val selectedTask: Task? = null,
+    var selectedTask: Task? = null,
     val appliedFilter: Optional<TaskFilter> = Optional.Absent,
     val filter: TaskFilterModel = TaskFilterModel(status = "pending"),
     val allTasks: List<Task> = emptyList()
@@ -94,6 +92,7 @@ class TasksViewModel @Inject constructor(
             }
             // Remove all that don't have id
             allTasks = allTasks.filter { it.id != "0" }
+
 
             _state.update {
                 it.copy(
@@ -246,7 +245,7 @@ class TasksViewModel @Inject constructor(
             }
 
             try {
-                tasksRepository.editTask(
+                val task = tasksRepository.editTask(
                     taskId,
                     desc,
                     due,
@@ -257,6 +256,10 @@ class TasksViewModel @Inject constructor(
                     recurringOptional,
                     untilOptional
                 )
+
+                _state.update {
+                    it.copy(selectedTask = task)
+                }
             } catch (e: Exception) {
                 errorChan.send(e.message ?: "An error occurred")
             }

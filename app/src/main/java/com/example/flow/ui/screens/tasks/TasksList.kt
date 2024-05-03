@@ -1,9 +1,8 @@
 package com.example.flow.ui.screens.tasks
 
-import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +18,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
@@ -37,7 +39,9 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.pullToRefresh
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -60,16 +64,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.flow.R
 import com.example.flow.TaskNavGraph
-import com.example.flow.data.model.AuthResult
 import com.example.flow.data.model.TaskFilterModel
 import com.example.flow.ui.components.BottomNav
 import com.example.flow.ui.components.tasks.CreateTaskSheet
 import com.example.flow.ui.components.tasks.TaskDateSheet
 import com.example.flow.ui.components.tasks.TaskItem
 import com.example.flow.ui.components.tasks.TaskTimeSheet
-import com.example.flow.ui.screens.destinations.LoginScreenDestination
 import com.example.flow.ui.screens.destinations.TaskDetailDestination
-import com.example.flow.ui.screens.destinations.TimeScreenDestination
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
 import java.time.LocalTime
@@ -91,6 +92,7 @@ fun TasksScreen(
     val context = LocalContext.current
     var showSheet by remember { mutableStateOf(false) }
     var filterOpen by remember { mutableStateOf(false) }
+    var isRefreshing by remember { mutableStateOf(false) }
 
     val now = ZonedDateTime.now()
 
@@ -112,13 +114,7 @@ fun TasksScreen(
     }.sortedBy { it.dueDateTime }
 
     val refreshState = rememberPullToRefreshState()
-    if (refreshState.isRefreshing) {
-        LaunchedEffect(true) {
-            // fetch something
-            viewModel.fetchTasks()
-            refreshState.endRefresh()
-        }
-    }
+    val scrollState = rememberLazyListState()
 
     val views = listOf("pending", "active", "completed")
 
@@ -154,7 +150,6 @@ fun TasksScreen(
     }
 
     Scaffold(
-        modifier = Modifier.nestedScroll(refreshState.nestedScrollConnection),
         bottomBar = {
             BottomNav(navController = navController)
         },
@@ -170,18 +165,31 @@ fun TasksScreen(
         },
         snackbarHost = {
             SnackbarHost(hostState = snackBarHostState)
-        }
+        },
+        modifier = Modifier.pullToRefresh(
+            state = refreshState,
+            isRefreshing = isRefreshing,
+            onRefresh = {
+                isRefreshing = true
+                viewModel.fetchTasks()
+                isRefreshing = false
+            }
+        )
     ) { paddingValues ->
 
-        Box(Modifier.padding(paddingValues)) {
+        Box(
+            modifier = Modifier.padding(paddingValues),
+        ) {
             LazyColumn(
+                state = scrollState,
                 contentPadding = PaddingValues(
-                    top = paddingValues.calculateTopPadding() + 16.dp,
-                    bottom = paddingValues.calculateBottomPadding() + 8.dp,
+                    top = paddingValues.calculateTopPadding() + 4.dp,
+                    bottom = paddingValues.calculateBottomPadding(),
                     start = 16.dp,
                     end = 16.dp
                 ),
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
             ) {
                 item {
                     Column {
@@ -246,12 +254,12 @@ fun TasksScreen(
                                 verticalArrangement = Arrangement.Center,
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .padding(top = 64.dp)
+                                    .padding(top = 12.dp)
                             ) {
                                 Image(
                                     painter = painterResource(R.drawable.cat),
                                     contentDescription = null,
-                                    modifier = Modifier.size(240.dp),
+                                    modifier = Modifier.size(140.dp),
                                 )
                                 Text("No tasks", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                                 Text("Create a task or adjust filter", fontSize = 14.sp)
@@ -360,11 +368,6 @@ fun TasksScreen(
                     }
                 }
             }
-
-            PullToRefreshContainer(
-                modifier = Modifier.align(Alignment.TopCenter),
-                state = refreshState,
-            )
         }
     }
 }

@@ -40,7 +40,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.flow.TaskNavGraph
-import com.example.flow.TimeNavGraph
 import com.example.flow.ui.components.BottomNav
 import com.example.flow.ui.screens.tasks.TasksViewModel
 import com.ramcosta.composedestinations.annotation.Destination
@@ -130,6 +129,7 @@ fun TaskTagsScreen(
                     singleLine = true,
                     onValueChange = { text = it },
                     label = { Text("Add tag") },
+                    modifier = Modifier.weight(1f)
                 )
                 Button(onClick = {
                     val tags = state.selectedTask?.tags!!.toMutableList()

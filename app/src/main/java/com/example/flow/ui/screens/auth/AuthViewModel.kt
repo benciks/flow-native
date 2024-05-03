@@ -1,16 +1,12 @@
 package com.example.flow.ui.screens.auth
 
-import android.os.Build
 import android.util.Log
-import androidx.annotation.RequiresExtension
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.flow.data.model.AuthResult
 import com.example.flow.data.model.User
 import com.example.flow.data.repository.AuthRepository
-import com.example.flow.ui.screens.time.TimeRecordsState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.scopes.ActivityScoped
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

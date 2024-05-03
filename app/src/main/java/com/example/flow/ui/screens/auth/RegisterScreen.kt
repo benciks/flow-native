@@ -1,8 +1,6 @@
 package com.example.flow.ui.screens.auth
 
-import android.os.Build
 import android.widget.Toast
-import androidx.annotation.RequiresExtension
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,10 +28,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.flow.data.model.AuthResult
 import com.example.flow.ui.screens.destinations.LoginScreenDestination
-import com.example.flow.ui.screens.destinations.RegisterScreenDestination
 import com.example.flow.ui.screens.destinations.TimeScreenDestination
 import com.ramcosta.composedestinations.annotation.Destination
-import javax.inject.Inject
 
 @Destination
 @Composable
@@ -96,7 +92,23 @@ fun RegisterScreen(
                     ),
                     singleLine = true
                 )
-                Button(onClick = { viewModel.signUp(email, password) }) {
+                Button(onClick = {
+                    if (email.isEmpty() || password.isEmpty()) {
+                        Toast.makeText(context, "Please fill in all fields", Toast.LENGTH_SHORT)
+                            .show()
+                        return@Button
+                    }
+
+                    if (password.length < 8) {
+                        Toast.makeText(
+                            context,
+                            "Password must be at least 8 characters",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@Button
+                    }
+                    viewModel.signUp(email, password)
+                }) {
                     Text("Sign up")
                 }
 

@@ -1,12 +1,9 @@
 package com.example.flow.ui.screens.auth
 
-import android.os.Build
 import android.widget.Toast
-import androidx.annotation.RequiresExtension
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
@@ -29,9 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import androidx.navigation.NavGraph
 import com.example.flow.data.model.AuthResult
-import com.example.flow.ui.screens.NavGraphs
 import com.example.flow.ui.screens.destinations.LoginScreenDestination
 import com.example.flow.ui.screens.destinations.RegisterScreenDestination
 import com.example.flow.ui.screens.destinations.TimeScreenDestination
@@ -103,7 +98,14 @@ fun LoginScreen(
                     ),
                     singleLine = true
                 )
-                Button(onClick = { viewModel.login(email, password) }) {
+                Button(onClick = {
+                    if (email.isEmpty() || password.isEmpty()) {
+                        Toast.makeText(context, "Please fill in all fields", Toast.LENGTH_SHORT)
+                            .show()
+                        return@Button
+                    }
+                    viewModel.login(email, password)
+                }) {
                     Text("Login")
                 }
 

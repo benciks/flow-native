@@ -3,7 +3,6 @@ package com.example.flow.ui.screens.time
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.compose.rememberNavController
 import com.apollographql.apollo3.api.Optional
 import com.example.flow.data.model.TimeRecord
 import com.example.flow.data.repository.TimeRecordRepository
@@ -14,13 +13,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.LocalDateTime
 import java.time.ZoneId
-import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
-import kotlin.math.log
 
 data class TimeRecordsState(
     val timeRecords: List<TimeRecord> = emptyList(),
@@ -51,6 +47,7 @@ class TimeRecordsViewModel @Inject constructor(
     fun fetchTimeRecords() {
         viewModelScope.launch {
             try {
+                _state.update { it.copy(isLoading = true) }
                 val timeRecords = timeRecordsRepository.getTimeRecords()
                 val recentTags = timeRecords.flatMap { it.tags }.distinct()
                 _state.update {
@@ -60,6 +57,7 @@ class TimeRecordsViewModel @Inject constructor(
                     )
                 }
 
+                _state.update { it.copy(isLoading = false) }
                 restartTimerIfRunning(timeRecords)
             } catch (e: Exception) {
                 errorChan.send(e.message ?: "Error fetching time records")
@@ -118,6 +116,14 @@ class TimeRecordsViewModel @Inject constructor(
             }
 
             updateTimer()
+        } else {
+            _state.update {
+                it.copy(
+                    isTracking = false,
+                    startedAt = null,
+                    currentTimeSeconds = 0
+                )
+            }
         }
     }
 
@@ -149,19 +155,19 @@ class TimeRecordsViewModel @Inject constructor(
             try {
                 timeRecordsRepository.startTimer()
                 timeRecords = timeRecordsRepository.getTimeRecords()
+
+                _state.update {
+                    it.copy(
+                        isTracking = true,
+                        timeRecords = timeRecords,
+                        startedAt = ZonedDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
+                    )
+                }
+
+                updateTimer()
             } catch (e: Exception) {
                 errorChan.send(e.message ?: "Error starting timer")
             }
-
-            _state.update {
-                it.copy(
-                    isTracking = true,
-                    timeRecords = timeRecords,
-                    startedAt = ZonedDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
-                )
-            }
-
-            updateTimer()
         }
     }
 

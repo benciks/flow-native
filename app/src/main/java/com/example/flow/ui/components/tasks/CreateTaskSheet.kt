@@ -1,9 +1,17 @@
 package com.example.flow.ui.components.tasks
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsIgnoringVisibility
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -32,25 +40,32 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import keyboardAsState
 import kotlinx.coroutines.launch
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun CreateTaskSheet(
     onDismiss: () -> Unit,
     onCreate: (description: String, due: ZonedDateTime?, project: String, priority: String) -> Unit,
     recentProjects: List<String> = List<String>(5) { "Project $it" }
 ) {
-    val modalState = rememberModalBottomSheetState()
+    val modalState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    val isKeyboardOpen by keyboardAsState()
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = modalState,
         dragHandle = { BottomSheetDefaults.DragHandle() },
+        contentWindowInsets = {
+            if (isKeyboardOpen) WindowInsets.ime else WindowInsets.navigationBars
+        }
     )
     {
         var text by remember { mutableStateOf("") }
@@ -131,7 +146,7 @@ fun CreateTaskSheet(
                         focusedBorderColor = Color.Transparent,
                         unfocusedBorderColor = Color.Transparent,
                     ),
-                    maxLines = 1,
+                    singleLine = true,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(0.dp)
@@ -155,7 +170,7 @@ fun CreateTaskSheet(
         }
 
         Row(
-            modifier = Modifier.padding(bottom = 48.dp),
+            modifier = Modifier.padding(bottom = 12.dp),
         ) {
             TextButton(onClick = {
                 scope.launch {

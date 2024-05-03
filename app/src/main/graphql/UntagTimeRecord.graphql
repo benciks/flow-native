@@ -1,8 +1,8 @@
 mutation untagTimeRecord($id: ID!, $tag: String!) {
-  untagTimeRecord(id: $id, tag: $tag) {
-    id
-    start
-    end
-    tags
-  }
+    untagTimeRecord(id: $id, tag: $tag) {
+        id
+        start
+        end
+        tags
+    }
 }

@@ -2,7 +2,12 @@ package com.example.flow.ui.components.tasks
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
@@ -28,11 +33,12 @@ fun TaskDateSheet(
     onCreate: (ZonedDateTime) -> Unit = {},
     selectedDate: ZonedDateTime? = null
 ) {
-    val modalState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val modalState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = modalState,
         dragHandle = { BottomSheetDefaults.DragHandle() },
+        contentWindowInsets = { WindowInsets.navigationBars }
     )
     {
         val initialDate = selectedDate?.toInstant()?.toEpochMilli() ?: System.currentTimeMillis()
