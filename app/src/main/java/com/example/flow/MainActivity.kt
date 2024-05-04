@@ -28,8 +28,6 @@ import com.example.flow.ui.screens.NavGraphs
 import com.example.flow.ui.screens.tasks.TasksViewModel
 import com.example.flow.ui.screens.time.TimeRecordsViewModel
 import com.example.flow.ui.theme.FlowTheme
-import com.example.flow.util.ConnectionState
-import com.example.flow.util.connectivityState
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.annotation.NavGraph
 import com.ramcosta.composedestinations.annotation.RootNavGraph
@@ -59,58 +57,24 @@ class MainActivity : ComponentActivity() {
         setContent {
             FlowTheme {
                 val navController = rememberNavController()
-                val connection by connectivityState()
-
-                val isConnected = connection === ConnectionState.Available
-
-                if (!isConnected) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.casette),
-                                contentDescription = "casette",
-                                modifier = Modifier.size(maxOf(200.dp))
-                            )
-                            Text(
-                                "No connection",
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                "Please check your connection and try again.",
-                                fontSize = 16.sp,
-                                textAlign = TextAlign.Center
-                            )
+                DestinationsNavHost(
+                    navGraph = NavGraphs.root,
+                    navController = navController,
+                    dependenciesContainerBuilder = {
+                        dependency(NavGraphs.time) {
+                            val parentEntry = remember(navBackStackEntry) {
+                                navController.getBackStackEntry(NavGraphs.time.route)
+                            }
+                            hiltViewModel<TimeRecordsViewModel>(parentEntry)
+                        }
+                        dependency(NavGraphs.task) {
+                            val parentEntry = remember(navBackStackEntry) {
+                                navController.getBackStackEntry(NavGraphs.task.route)
+                            }
+                            hiltViewModel<TasksViewModel>(parentEntry)
                         }
                     }
-                } else {
-                    DestinationsNavHost(
-                        navGraph = NavGraphs.root,
-                        navController = navController,
-                        dependenciesContainerBuilder = {
-                            dependency(NavGraphs.time) {
-                                val parentEntry = remember(navBackStackEntry) {
-                                    navController.getBackStackEntry(NavGraphs.time.route)
-                                }
-                                hiltViewModel<TimeRecordsViewModel>(parentEntry)
-                            }
-                            dependency(NavGraphs.task) {
-                                val parentEntry = remember(navBackStackEntry) {
-                                    navController.getBackStackEntry(NavGraphs.task.route)
-                                }
-                                hiltViewModel<TasksViewModel>(parentEntry)
-                            }
-                        }
-                    )
-                }
+                )
             }
         }
     }
