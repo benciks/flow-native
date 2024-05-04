@@ -202,7 +202,7 @@ fun ProfileScreen(
                                 style = MaterialTheme.typography.bodyLarge
                             )
 
-                            Text(text = "2.6.1")
+                            Text(text = "2.6.2")
                         }
                     }
                     item {
@@ -219,7 +219,7 @@ fun ProfileScreen(
                                 style = MaterialTheme.typography.bodyLarge
                             )
 
-                            Text(text = "1.4.3")
+                            Text(text = "1.7.1")
                         }
                     }
                     item {

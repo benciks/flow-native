@@ -55,7 +55,7 @@ object ApolloModule {
             .build()
 
         return ApolloClient.Builder()
-            .serverUrl("https://flow.benciks.me/query")
+            .serverUrl(getBaseUrl())
             .normalizedCache(cacheFactory)
             .fetchPolicy(FetchPolicy.NetworkFirst)
             .okHttpClient(okHttpClient)

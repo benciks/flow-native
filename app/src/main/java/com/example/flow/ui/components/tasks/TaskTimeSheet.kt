@@ -35,7 +35,7 @@ fun TaskTimeSheet(
     onCreate: (ZonedDateTime) -> Unit = {},
     selectedTime: ZonedDateTime? = null
 ) {
-    val modalState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    val modalState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = modalState,

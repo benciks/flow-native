@@ -12,8 +12,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ModalBottomSheetDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -33,7 +36,7 @@ fun TaskDateSheet(
     onCreate: (ZonedDateTime) -> Unit = {},
     selectedDate: ZonedDateTime? = null
 ) {
-    val modalState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    val modalState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = modalState,
@@ -47,7 +50,10 @@ fun TaskDateSheet(
         val scope = rememberCoroutineScope()
 
         DatePicker(
-            state = dateState
+            state = dateState,
+            colors = DatePickerDefaults.colors(
+                containerColor = BottomSheetDefaults.ContainerColor,
+            ),
         )
 
         Row(

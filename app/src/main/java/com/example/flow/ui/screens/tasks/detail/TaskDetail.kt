@@ -7,11 +7,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -115,6 +117,7 @@ fun TaskDetail(
     }
     var frequency by remember { mutableStateOf(state.selectedTask?.recur ?: "") }
     var selectedUntil by remember { mutableStateOf(state.selectedTask?.untilDateTime) }
+    var lazyColumnState = rememberLazyListState()
 
     if (untilDateSheet) {
         TaskDateSheet(
@@ -275,8 +278,11 @@ fun TaskDetail(
     ) { paddingValues ->
         Box(Modifier.padding(paddingValues)) {
             LazyColumn(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                state = lazyColumnState
             ) {
                 item {
                     Text("Description")

@@ -56,7 +56,7 @@ fun CreateTaskSheet(
     onCreate: (description: String, due: ZonedDateTime?, project: String, priority: String) -> Unit,
     recentProjects: List<String> = List<String>(5) { "Project $it" }
 ) {
-    val modalState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    val modalState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val isKeyboardOpen by keyboardAsState()
 
     ModalBottomSheet(
@@ -197,7 +197,6 @@ fun CreateTaskSheet(
                 DropdownMenu(
                     expanded = priorityExpanded,
                     onDismissRequest = { priorityExpanded = false },
-                    offset = DpOffset(0.dp, y = -215.dp)
                 ) {
                     DropdownMenuItem(text = {
                         Text(text = "Low")

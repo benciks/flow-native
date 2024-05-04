@@ -99,6 +99,16 @@ fun RegisterScreen(
                         return@Button
                     }
 
+                    // Username cannot have spaces
+                    if (email.contains(" ")) {
+                        Toast.makeText(
+                            context,
+                            "Username cannot have spaces",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@Button
+                    }
+
                     if (password.length < 8) {
                         Toast.makeText(
                             context,

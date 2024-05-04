@@ -36,7 +36,7 @@ fun CreateProjectSheet(
     onDismiss: () -> Unit,
     onCreate: (String) -> Unit = {}
 ) {
-    val modalState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    val modalState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var projectName by remember { mutableStateOf("") }
     val isKeyboardOpen by keyboardAsState()
 
