@@ -1,5 +1,6 @@
 package com.example.flow.ui.components.tasks
 
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
@@ -107,8 +108,11 @@ fun CreateTaskSheet(
             },
                 onCreate = {
                     // Set the time of the selectedDueDate
+                    Log.i("CreateTaskSheet", "Selected time: $it");
                     selectedDueDate.value =
                         selectedDueDate.value?.withHour(it.hour)?.withMinute(it.minute)
+
+                    Log.i("CreateTaskSheet", "Selected due date: ${selectedDueDate.value}");
                     scope.launch {
                         timeSheet.value = false
                         modalState.show()

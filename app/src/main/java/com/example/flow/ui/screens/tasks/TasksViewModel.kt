@@ -1,5 +1,6 @@
 package com.example.flow.ui.screens.tasks
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.apollographql.apollo3.api.Optional
@@ -138,7 +139,7 @@ class TasksViewModel @Inject constructor(
                 due =
                     Optional.Present(
                         dueDate.format(
-                            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HHmmss'Z'").withZone(
+                            DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'").withZone(
                                 ZoneId.of("UTC")
                             )
                         )
