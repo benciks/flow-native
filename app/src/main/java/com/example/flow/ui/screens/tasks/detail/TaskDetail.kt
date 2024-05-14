@@ -226,7 +226,7 @@ fun TaskDetail(
                             Text("Cancel")
                         }
                         Button(onClick = {
-                            viewModel.deleteTask(state.selectedTask!!.id)
+                            viewModel.deleteTask(state.selectedTask!!.uuid)
                             navController.popBackStack()
                             openAlertDialog.value = false
                         }) {

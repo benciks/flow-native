@@ -1,4 +1,4 @@
-mutation deleteTask($id: ID!) {
+mutation deleteTask($id: String!) {
     deleteTask(id: $id) {
         id
         description

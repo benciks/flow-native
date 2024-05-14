@@ -18,84 +18,83 @@ directive @specifiedBy(url: String!) on SCALAR
 scalar File
 
 type Mutation {
-    timeStart: TimeRecord!
-    timeStop: TimeRecord!
-    deleteTimeRecord(id: ID!): TimeRecord!
-    modifyTimeRecordDate(id: ID!, start: String, end: String): TimeRecord!
-    tagTimeRecord(id: ID!, tag: String!): TimeRecord!
-    untagTimeRecord(id: ID!, tag: String!): TimeRecord!
-    createTask(description: String!, project: String, priority: String, due: String): Task!
-    markTaskDone(id: ID!): Task!
-    editTask(id: ID!, description: String, project: String, priority: String, due: String, tags: [String], depends: [String], recurring: String, until: String): Task!
-    startTask(id: ID!): Task!
-    stopTask(id: ID!): Task!
-    deleteTask(id: ID!): Task!
-    signIn(username: String!, password: String!): SignInPayload!
-    signUp(username: String!, password: String!): SignInPayload!
-    setTimewHook(enabled: Boolean!): Boolean!
-    signOut: Boolean!
-    downloadTaskKeys: String!
-    uploadTimeWarriorKey(key: String!): Boolean!
+  timeStart: TimeRecord!
+  timeStop: TimeRecord!
+  deleteTimeRecord(id: ID!): TimeRecord!
+  modifyTimeRecordDate(id: ID!, start: String, end: String): TimeRecord!
+  tagTimeRecord(id: ID!, tag: String!): TimeRecord!
+  untagTimeRecord(id: ID!, tag: String!): TimeRecord!
+  createTask(description: String!, project: String, priority: String, due: String): Task!
+  markTaskDone(id: ID!): Task!
+  editTask(id: ID!, description: String, project: String, priority: String, due: String, tags: [String], depends: [String], recurring: String, until: String): Task!
+  startTask(id: ID!): Task!
+  stopTask(id: ID!): Task!
+  deleteTask(id: String!): Task!
+  signIn(username: String!, password: String!): SignInPayload!
+  signUp(username: String!, password: String!): SignInPayload!
+  setTimewHook(enabled: Boolean!): Boolean!
+  signOut: Boolean!
+  downloadTaskKeys: String!
+  uploadTimeWarriorKey(key: String!): Boolean!
 }
 
 type Query {
-    timeRecords: [TimeRecord!]!
-    timeTags: [String!]!
-    me: User!
-    tasks(filter: TaskFilter): [Task!]!
-    recentTaskProjects: [String!]!
-    recentTaskTags: [String!]!
+  timeRecords: [TimeRecord!]!
+  timeTags: [String!]!
+  me: User!
+  tasks(filter: TaskFilter): [Task!]!
+  recentTaskProjects: [String!]!
+  recentTaskTags: [String!]!
 }
 
 type SignInPayload {
-    token: String!
-    user: User!
+  token: String!
+  user: User!
 }
 
 type Task {
-    id: ID!
-    description: String!
-    entry: String!
-    modified: String!
-    uuid: String!
-    urgency: Float!
-    status: String!
-    priority: String!
-    due: String!
-    project: String!
-    tags: [String!]!
-    start: String
-    depends: [String!]!
-    parent: String
-    recur: String
-    until: String
+  id: ID!
+  description: String!
+  entry: String!
+  modified: String!
+  uuid: String!
+  urgency: Float!
+  status: String!
+  priority: String!
+  due: String!
+  project: String!
+  tags: [String!]!
+  start: String
+  depends: [String!]!
+  parent: String
+  recur: String
+  until: String
 }
 
 input TaskFilter {
-    status: String
-    project: String
-    priority: String
-    due: String
-    tags: [String!]
-    description: String
+  status: String
+  project: String
+  priority: String
+  due: String
+  tags: [String!]
+  description: String
 }
 
 scalar Time
 
 type TimeRecord {
-    id: ID!
-    start: String!
-    end: String!
-    tags: [String!]!
+  id: ID!
+  start: String!
+  end: String!
+  tags: [String!]!
 }
 
 type User {
-    id: ID!
-    username: String!
-    password: String!
-    createdAt: Time!
-    timewId: String!
-    taskdUuid: String!
-    timewHook: Boolean!
+  id: ID!
+  username: String!
+  password: String!
+  timewId: String!
+  taskdUuid: String!
+  timewHook: Boolean!
 }
 
