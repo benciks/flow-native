@@ -290,7 +290,8 @@ fun TaskDetail(
                         value = description,
                         textStyle = TextStyle.Default.copy(
                             fontSize = 20.sp,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
                         ),
                         onValueChange = { description = it },
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
