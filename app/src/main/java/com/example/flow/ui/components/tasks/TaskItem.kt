@@ -127,7 +127,7 @@ fun TaskItem(
                 verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                if (!disabled) {
+                if (!disabled && task.status != "deleted") {
                     Checkbox(
                         modifier = Modifier
                             .size(20.dp)
