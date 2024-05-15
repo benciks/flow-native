@@ -5,7 +5,7 @@ created as part of bachelor thesis at the Brno University of Technology. There i
 releases page which is connected to server running for demonstration purposes. It is encouraged to
 spin up your own server for production use, which is available
 at [https://github.com/benciks/flow-backend](https://github.com/benciks/flow-backend). Afterwards,
-you need to edit the ```app/src/main/java/com/example/flow/di/AppModule.kt``` file and add your
+you need to edit the ```app/src/main/java/com/example/flow/di/AppolloModule.kt``` file and add your
 server url to the ```PROD_BASE_URL``` variable.
 
 ## Features
