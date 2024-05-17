@@ -8,6 +8,9 @@ at [https://github.com/benciks/flow-backend](https://github.com/benciks/flow-bac
 you need to edit the ```app/src/main/java/com/example/flow/di/AppolloModule.kt``` file and add your
 server url to the ```PROD_BASE_URL``` variable.
 
+## Synchronization
+In case you are using the demo application which is connected to the demonstration server and you want to set up sync with your Timewarrior and Taskwarrior instances, please visit [flow-sync](https://sync.benciks.me/) and log in with the credentials used in app. Afterwards, follow the configuration instructions provided at this page.
+
 ## Features
 
 - [x] Time tracking
